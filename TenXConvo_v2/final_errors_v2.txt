@@ -1,0 +1,7 @@
+﻿C:\Users\User\Downloads\TenXConvo_v7_with_EasyPaisa\TenXConvo_output\tenxconvo_v2\src\tenxconvo.api\Hubs\ChatHub.cs(200,13): error CS0128: A local variable or function named 'conv' is already defined in this scope [C:\Users\User\Downloads\TenXConvo_v7_with_EasyPaisa\TenXConvo_output\tenxconvo_v2\src\tenxconvo.api\tenxconvo.api.csproj]
+
+Build FAILED.
+    0 Warning(s)
+    1 Error(s)
+
+Time Elapsed 00:00:38.97
