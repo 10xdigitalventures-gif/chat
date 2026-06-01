@@ -2,11 +2,14 @@
   "name": "tenxconvo-workspace",
   "private": true,
   "scripts": {
+    "install:all": "npm install && cd tenx-api-next && npm install && cd ../tenx-frontend/admin-portal && npm install && cd ../consultant-portal && npm install && cd ../user-portal && npm install",
+    "build:all": "cd tenx-api-next && npm run build && cd ../tenx-frontend/admin-portal && npm run build && cd ../consultant-portal && npm run build && cd ../user-portal && npm run build",
     "dev": "concurrently -n API,ADMIN,CONSULTANT,USER -c blue,green,magenta,cyan \"npm run dev:api\" \"npm run dev:admin\" \"npm run dev:consultant\" \"npm run dev:user\"",
-    "dev:api": "cd tenxconvo_v2/src/tenxconvo.api && dotnet run",
+    "dev:api": "cd tenx-api-next && npm run dev",
     "dev:admin": "cd tenx-frontend/admin-portal && npm run dev",
     "dev:consultant": "cd tenx-frontend/consultant-portal && npm run dev",
-    "dev:user": "cd tenx-frontend/user-portal && npm run dev"
+    "dev:user": "cd tenx-frontend/user-portal && npm run dev",
+    "start": "cd tenx-api-next && npm start"
   },
   "devDependencies": {
     "concurrently": "^9.0.1"

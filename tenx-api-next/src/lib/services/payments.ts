@@ -140,8 +140,12 @@ export const EasyPaisaService = {
                 where: { consultantUserId: consultantId }
             });
             if (config?.easyPaisaEnabled && config?.easyPaisaAccount) {
-                // EasyPaisa configuration usually involves Store ID and Hash Key per merchant
-                // For this migration, we assume the account field stores the necessary info or we use platform defaults
+                // Assuming account field contains "STORE_ID:HASH_KEY" for simplicity in this demo
+                const parts = config.easyPaisaAccount.split(':');
+                if (parts.length === 2) {
+                    storeId = parts[0];
+                    hashKey = parts[1];
+                }
             }
         }
 
@@ -179,13 +183,21 @@ export const EasyPaisaService = {
 export const JazzCashService = {
     generateForm: async (orderRefNum: string, amount: number, postBackUrl: string, consultantId?: string) => {
         let merchantId = process.env.JAZZCASH_MERCHANT_ID || 'xxx';
+        let password   = process.env.JAZZCASH_PASSWORD || 'xxx';
+        let hashKey    = process.env.JAZZCASH_HASH_KEY || 'xxx';
 
         if (consultantId) {
             const config = await prisma.consultantServiceConfig.findUnique({
                 where: { consultantUserId: consultantId }
             });
             if (config?.jazzCashEnabled && config?.jazzCashAccount) {
-                merchantId = config.jazzCashAccount;
+                // Assuming "MERCHANT_ID:PASSWORD:HASH_KEY"
+                const parts = config.jazzCashAccount.split(':');
+                if (parts.length === 3) {
+                    merchantId = parts[0];
+                    password   = parts[1];
+                    hashKey    = parts[2];
+                }
             }
         }
 
