@@ -296,6 +296,8 @@ model ConsultantServiceConfig {
   payFastEnabled   Boolean  @default(false)
   payFastMerchantId String?
   payFastSecuredKey String?
+  voiceEnabled     Boolean  @default(false)
+  videoEnabled     Boolean  @default(false)
 
   consultant       ConsultantProfile @relation(fields: [consultantUserId], references: [userId], onDelete: Cascade)
 }

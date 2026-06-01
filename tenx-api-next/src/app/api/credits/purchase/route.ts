@@ -36,11 +36,12 @@ export async function POST(req: Request) {
     }
 
     if (gateway === 'payfast') {
+        const user = await prisma.appUser.findUnique({ where: { id: userId } });
         const html = await PayFastService.generatePaymentForm(
             `PAY-${Date.now()}`,
             `BASKET-${Date.now()}`,
             items.reduce((acc, curr) => acc + curr.price, 0),
-            'user@example.com', // Should ideally get from session/JWT
+            user?.email || '',
             consultantId
         );
         return NextResponse.json({
@@ -56,7 +57,8 @@ export async function POST(req: Request) {
         const html = await EasyPaisaService.generateForm(
             `EP-${Date.now()}`,
             items.reduce((acc, curr) => acc + curr.price, 0),
-            `${process.env.NEXT_PUBLIC_URL}/api/payments/easypaisa/callback`
+            `${process.env.NEXT_PUBLIC_URL}/api/payments/easypaisa/callback`,
+            consultantId
         );
         return NextResponse.json({
             success: true,
@@ -71,7 +73,8 @@ export async function POST(req: Request) {
         const html = await JazzCashService.generateForm(
             `JC-${Date.now()}`,
             items.reduce((acc, curr) => acc + curr.price, 0),
-            `${process.env.NEXT_PUBLIC_URL}/api/payments/jazzcash/callback`
+            `${process.env.NEXT_PUBLIC_URL}/api/payments/jazzcash/callback`,
+            consultantId
         );
         return NextResponse.json({
             success: true,

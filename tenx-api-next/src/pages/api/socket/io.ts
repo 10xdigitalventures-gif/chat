@@ -37,6 +37,20 @@ const ioHandler = (req: NextApiRequest, res: NextApiResponseServerIO) => {
             socket.join(`conversation:${conversationId}`);
         });
 
+        socket.on("call_user", (data) => {
+            io.to(`user:${data.userToCall}`).emit("call_user", {
+                signal: data.signalData,
+                from: userId,
+                name: payload.role, // Simple name for demo
+                type: data.type, // 'voice' | 'video'
+                conversationId: data.conversationId
+            });
+        });
+
+        socket.on("answer_call", (data) => {
+            io.to(`user:${data.to}`).emit("call_accepted", data.signal);
+        });
+
         socket.on("send_message", async (data) => {
             const { conversationId, body, messageType } = data;
 

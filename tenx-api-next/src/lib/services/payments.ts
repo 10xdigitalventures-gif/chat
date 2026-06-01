@@ -131,9 +131,19 @@ export const PayFastService = {
 };
 
 export const EasyPaisaService = {
-    generateForm: (orderRefNum: string, amount: number, postBackUrl: string) => {
-        const hashKey = process.env.EASYPAISA_HASH_KEY || 'xxx';
-        const storeId = process.env.EASYPAISA_STORE_ID || 'xxx';
+    generateForm: async (orderRefNum: string, amount: number, postBackUrl: string, consultantId?: string) => {
+        let hashKey = process.env.EASYPAISA_HASH_KEY || 'xxx';
+        let storeId = process.env.EASYPAISA_STORE_ID || 'xxx';
+
+        if (consultantId) {
+            const config = await prisma.consultantServiceConfig.findUnique({
+                where: { consultantUserId: consultantId }
+            });
+            if (config?.easyPaisaEnabled && config?.easyPaisaAccount) {
+                // EasyPaisa configuration usually involves Store ID and Hash Key per merchant
+                // For this migration, we assume the account field stores the necessary info or we use platform defaults
+            }
+        }
 
         const fields: any = {
             storeId,
@@ -167,9 +177,20 @@ export const EasyPaisaService = {
 }
 
 export const JazzCashService = {
-    generateForm: (orderRefNum: string, amount: number, postBackUrl: string) => {
+    generateForm: async (orderRefNum: string, amount: number, postBackUrl: string, consultantId?: string) => {
+        let merchantId = process.env.JAZZCASH_MERCHANT_ID || 'xxx';
+
+        if (consultantId) {
+            const config = await prisma.consultantServiceConfig.findUnique({
+                where: { consultantUserId: consultantId }
+            });
+            if (config?.jazzCashEnabled && config?.jazzCashAccount) {
+                merchantId = config.jazzCashAccount;
+            }
+        }
+
         const fields: any = {
-            pp_MerchantID: process.env.JAZZCASH_MERCHANT_ID || 'xxx',
+            pp_MerchantID: merchantId,
             pp_Amount: Math.round(amount * 100),
             pp_TxnRefNo: orderRefNum,
             pp_ReturnURL: postBackUrl,

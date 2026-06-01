@@ -8,7 +8,7 @@ export async function GET(req: Request) {
 
     const profile = await prisma.consultantProfile.findUnique({
       where: { userId },
-      include: { user: true },
+      include: { user: true, serviceConfig: true },
     });
 
     if (!profile) return NextResponse.json({ success: false, message: 'Profile not found' }, { status: 404 });
@@ -37,6 +37,18 @@ export async function PUT(req: Request) {
         timezone: body.timezone,
         avatarUrl: body.avatarUrl,
         updatedAt: new Date(),
+        serviceConfig: {
+          upsert: {
+            create: {
+              voiceEnabled: body.voiceEnabled ?? false,
+              videoEnabled: body.videoEnabled ?? false,
+            },
+            update: {
+              voiceEnabled: body.voiceEnabled,
+              videoEnabled: body.videoEnabled,
+            }
+          }
+        }
       },
     });
 

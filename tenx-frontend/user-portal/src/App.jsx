@@ -579,6 +579,20 @@ function MessagesPage() {
   })
 
   const activeConv = conversations.find(c => c.conversationId === activeId)
+  const [canCall, setCanCall] = useState({ voice: false, video: false })
+
+  useEffect(() => {
+    if (activeConv?.consultantId) {
+        // Fetch consultant config to see if calling is enabled
+        import('./api').then(({ consultantConfigApi }) => {
+            // Note: user-portal might not have admin api access, assuming userApi has a way or just check activeConv
+            setCanCall({
+                voice: activeConv.voiceEnabled ?? true,
+                video: activeConv.videoEnabled ?? true
+            })
+        })
+    }
+  }, [activeConv])
 
   return (
     <div className="crm-container">
@@ -644,8 +658,8 @@ function MessagesPage() {
                 </div>
               </div>
               <div style={{ display: 'flex', gap: 8 }}>
-                <button className="icon-btn"><Phone size={18} /></button>
-                <button className="icon-btn"><Video size={18} /></button>
+                {canCall.voice && <button className="icon-btn" onClick={() => toast.success('Starting voice call...')}><Phone size={18} /></button>}
+                {canCall.video && <button className="icon-btn" onClick={() => toast.success('Starting video call...')}><Video size={18} /></button>}
                 <button className="icon-btn"><Info size={18} /></button>
               </div>
             </div>

@@ -217,15 +217,37 @@ export function ProfilePage() {
         </div>
 
         <div className="card">
-          <h3 style={{ fontFamily: 'var(--font-head)', marginBottom: 16, fontSize: 14 }}>Visibility</h3>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16, padding: 14, background: 'var(--bg3)', borderRadius: 8 }}>
-            <label className="toggle">
-              <input type="checkbox" checked={form.isPublic ?? true} onChange={e => setForm(f => ({ ...f, isPublic: e.target.checked }))} />
-              <span className="toggle-slider" />
-            </label>
-            <div>
-              <div style={{ fontWeight: 600, fontSize: 13 }}>Public Profile</div>
-              <div style={{ fontSize: 11, color: 'var(--muted)' }}>Visible in consultant directory</div>
+          <h3 style={{ fontFamily: 'var(--font-head)', marginBottom: 16, fontSize: 14 }}>Visibility & Features</h3>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: 14, background: 'var(--bg3)', borderRadius: 8 }}>
+              <label className="toggle">
+                <input type="checkbox" checked={form.isPublic ?? true} onChange={e => setForm(f => ({ ...f, isPublic: e.target.checked }))} />
+                <span className="toggle-slider" />
+              </label>
+              <div>
+                <div style={{ fontWeight: 600, fontSize: 13 }}>Public Profile</div>
+                <div style={{ fontSize: 11, color: 'var(--muted)' }}>Visible in directory</div>
+              </div>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: 14, background: 'var(--bg3)', borderRadius: 8 }}>
+              <label className="toggle">
+                <input type="checkbox" checked={form.voiceEnabled ?? false} onChange={e => setForm(f => ({ ...f, voiceEnabled: e.target.checked }))} />
+                <span className="toggle-slider" />
+              </label>
+              <div>
+                <div style={{ fontWeight: 600, fontSize: 13 }}>Voice Calling</div>
+                <div style={{ fontSize: 11, color: 'var(--muted)' }}>Allow clients to voice call you</div>
+              </div>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: 14, background: 'var(--bg3)', borderRadius: 8 }}>
+              <label className="toggle">
+                <input type="checkbox" checked={form.videoEnabled ?? false} onChange={e => setForm(f => ({ ...f, videoEnabled: e.target.checked }))} />
+                <span className="toggle-slider" />
+              </label>
+              <div>
+                <div style={{ fontWeight: 600, fontSize: 13 }}>Video Calling</div>
+                <div style={{ fontSize: 11, color: 'var(--muted)' }}>Allow clients to video call you</div>
+              </div>
             </div>
           </div>
 
