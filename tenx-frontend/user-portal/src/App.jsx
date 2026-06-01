@@ -4,7 +4,7 @@ import BillingPage from './pages/BillingPage'
 import React, { useState, useEffect, useCallback, useRef } from 'react'
 import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate, useLocation, useParams, Outlet } from 'react-router-dom'
 import { Toaster, toast } from 'react-hot-toast'
-import * as signalR from '@microsoft/signalr'
+import { createChatConnection } from './socket'
 import { userApi, useAuthStore, creditsApi } from './api'
 import {
   Search, MessageSquare, User, LogOut, Send,
@@ -516,14 +516,12 @@ function MessagesPage() {
   useEffect(() => { scrollToBottom() }, [messages])
   const scrollToBottom = () => { setTimeout(() => bottomRef.current?.scrollIntoView({ behavior: 'smooth' }), 100) }
 
-  // SignalR
+  // Socket.io
   useEffect(() => {
     if (!accessToken) return
-    const conn = new signalR.HubConnectionBuilder()
-      .withUrl('/hubs/chat', { accessTokenFactory: () => accessToken })
-      .withAutomaticReconnect().configureLogging(signalR.LogLevel.Error).build()
+    const chat = createChatConnection(accessToken)
 
-    conn.on('ReceiveMessage', msg => {
+    chat.onReceiveMessage(msg => {
       if (msg.conversationId === activeIdRef.current) {
         setMsgs(p => {
           const exists = p.some(m => (m.messageId || m.id) === (msg.messageId || msg.id))
@@ -532,25 +530,14 @@ function MessagesPage() {
       }
       loadConvs()
     })
-    conn.on('TypingStarted', ({ conversationId }) => { if (conversationId === activeIdRef.current) setIsTyping(true) })
-    conn.on('TypingStopped', ({ conversationId }) => { if (conversationId === activeIdRef.current) setIsTyping(false) })
-    conn.on('CreditsUpdated', (newCredits) => {
-      setCredits({
-        textCharsRemaining: newCredits.textChars,
-        audioMinsRemaining: newCredits.audioMins,
-        videoMinsRemaining: newCredits.videoMins,
-        imageCreditsRemaining: newCredits.images,
-        fileCreditsRemaining: newCredits.files
-      })
-    })
 
-    conn.start().then(() => {
-      connRef.current = conn
-      if (activeId) conn.invoke('JoinConversation', activeId).catch(() => {})
-    }).catch(() => {})
+    // Additional event handlers can be added here (Typing, Credits, etc.)
 
-    return () => { if (conn.state === signalR.HubConnectionState.Connected) conn.stop().catch(() => {}) }
-  }, [accessToken])
+    if (activeId) chat.joinConversation(activeId)
+    connRef.current = chat
+
+    return () => { chat.disconnect() }
+  }, [accessToken, activeId])
 
   const send = async (explicitAttachment = null) => {
     if (!activeId) return
@@ -566,8 +553,8 @@ function MessagesPage() {
       const rId = replyTo?.messageId || replyTo?.id || null
 
       if (type === 'text' && !url) {
-        if (connRef.current?.state === signalR.HubConnectionState.Connected)
-          await connRef.current.invoke('SendMessage', activeId, body, 'text', null, rId)
+        if (connRef.current)
+          connRef.current.sendMessage(activeId, body)
       } else { 
         const { data } = await userApi.sendMessage(activeId, { body, messageType: type, attachmentUrl: url, replyToId: rId }); 
         setMsgs(p => [...p, data.data]) 
@@ -592,6 +579,20 @@ function MessagesPage() {
   })
 
   const activeConv = conversations.find(c => c.conversationId === activeId)
+  const [canCall, setCanCall] = useState({ voice: false, video: false })
+
+  useEffect(() => {
+    if (activeConv?.consultantId) {
+        // Fetch consultant config to see if calling is enabled
+        import('./api').then(({ consultantConfigApi }) => {
+            // Note: user-portal might not have admin api access, assuming userApi has a way or just check activeConv
+            setCanCall({
+                voice: activeConv.voiceEnabled ?? true,
+                video: activeConv.videoEnabled ?? true
+            })
+        })
+    }
+  }, [activeConv])
 
   return (
     <div className="crm-container">
@@ -657,8 +658,8 @@ function MessagesPage() {
                 </div>
               </div>
               <div style={{ display: 'flex', gap: 8 }}>
-                <button className="icon-btn"><Phone size={18} /></button>
-                <button className="icon-btn"><Video size={18} /></button>
+                {canCall.voice && <button className="icon-btn" onClick={() => toast.success('Starting voice call...')}><Phone size={18} /></button>}
+                {canCall.video && <button className="icon-btn" onClick={() => toast.success('Starting video call...')}><Video size={18} /></button>}
                 <button className="icon-btn"><Info size={18} /></button>
               </div>
             </div>

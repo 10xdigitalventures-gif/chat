@@ -345,12 +345,16 @@ export function UsersPage() {
             {/* ── Tab 1: Services ── */}
             {configTab === 'services' && (
               <div>
-                <p style={{ fontSize: 12, color: 'var(--muted)', marginBottom: 12 }}>Enable or disable message types this consultant can receive from clients. No limits — client can send as much as their wallet balance allows.</p>
+                <p style={{ fontSize: 12, color: 'var(--muted)', marginBottom: 12 }}>Enable or disable message types and calling features this consultant can receive from clients.</p>
                 {Cf('textEnabled', 'Text Messages')}
                 {Cf('audioEnabled', 'Audio Messages')}
                 {Cf('videoEnabled', 'Video Messages')}
                 {Cf('imageEnabled', 'Image / Photo')}
                 {Cf('fileEnabled', 'File Attachments')}
+                <div style={{ marginTop: 12, paddingTop: 12, borderTop: '1px solid var(--border)' }}>
+                  {Cf('voiceEnabled', '🎙️ Voice Calling')}
+                  {Cf('videoEnabled', '🎥 Video Calling')}
+                </div>
               </div>
             )}
 

@@ -3,7 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { toast } from 'react-hot-toast'
 import { useAuthStore } from '../store/authStore'
 import { consultantApi } from '../api'
-import * as signalR from '@microsoft/signalr'
+import { createChatConnection } from '../socket'
 import {
   ChevronRight, Loader, User, Users, MessageSquare,
   Send, Check, CheckCheck, X, Bell,
@@ -117,15 +117,20 @@ export function DashboardPage() {
   const navigate = useNavigate()
 
   useEffect(() => {
-    Promise.all([
-      consultantApi.getClients(1, 1, ''),
-      consultantApi.getRequests(),
-      consultantApi.getConversations(1, 50),
-    ]).then(([c, r, m]) => setStats({
-      clients: c.data.data?.totalRecords || 0,
-      pending: r.data.data?.length || 0,
-      unread:  (m.data.data?.items || []).reduce((s, c) => s + (c.unreadCount || 0), 0),
-    })).catch(() => {})
+    consultantApi.getStats()
+      .then(r => setStats(r.data.data))
+      .catch(() => {
+        // Fallback if stats API is not yet wired in frontend api.js
+        Promise.all([
+          consultantApi.getClients(1, 1, ''),
+          consultantApi.getRequests(),
+          consultantApi.getConversations(1, 50),
+        ]).then(([c, r, m]) => setStats({
+          clients: c.data.data?.totalRecords || 0,
+          pending: r.data.data?.length || 0,
+          unread:  (m.data.data?.items || []).reduce((s, c) => s + (c.unreadCount || 0), 0),
+        })).catch(() => {})
+      })
   }, [])
 
   return (
@@ -212,15 +217,37 @@ export function ProfilePage() {
         </div>
 
         <div className="card">
-          <h3 style={{ fontFamily: 'var(--font-head)', marginBottom: 16, fontSize: 14 }}>Visibility</h3>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16, padding: 14, background: 'var(--bg3)', borderRadius: 8 }}>
-            <label className="toggle">
-              <input type="checkbox" checked={form.isPublic ?? true} onChange={e => setForm(f => ({ ...f, isPublic: e.target.checked }))} />
-              <span className="toggle-slider" />
-            </label>
-            <div>
-              <div style={{ fontWeight: 600, fontSize: 13 }}>Public Profile</div>
-              <div style={{ fontSize: 11, color: 'var(--muted)' }}>Visible in consultant directory</div>
+          <h3 style={{ fontFamily: 'var(--font-head)', marginBottom: 16, fontSize: 14 }}>Visibility & Features</h3>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: 14, background: 'var(--bg3)', borderRadius: 8 }}>
+              <label className="toggle">
+                <input type="checkbox" checked={form.isPublic ?? true} onChange={e => setForm(f => ({ ...f, isPublic: e.target.checked }))} />
+                <span className="toggle-slider" />
+              </label>
+              <div>
+                <div style={{ fontWeight: 600, fontSize: 13 }}>Public Profile</div>
+                <div style={{ fontSize: 11, color: 'var(--muted)' }}>Visible in directory</div>
+              </div>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: 14, background: 'var(--bg3)', borderRadius: 8 }}>
+              <label className="toggle">
+                <input type="checkbox" checked={form.voiceEnabled ?? false} onChange={e => setForm(f => ({ ...f, voiceEnabled: e.target.checked }))} />
+                <span className="toggle-slider" />
+              </label>
+              <div>
+                <div style={{ fontWeight: 600, fontSize: 13 }}>Voice Calling</div>
+                <div style={{ fontSize: 11, color: 'var(--muted)' }}>Allow clients to voice call you</div>
+              </div>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: 14, background: 'var(--bg3)', borderRadius: 8 }}>
+              <label className="toggle">
+                <input type="checkbox" checked={form.videoEnabled ?? false} onChange={e => setForm(f => ({ ...f, videoEnabled: e.target.checked }))} />
+                <span className="toggle-slider" />
+              </label>
+              <div>
+                <div style={{ fontWeight: 600, fontSize: 13 }}>Video Calling</div>
+                <div style={{ fontSize: 11, color: 'var(--muted)' }}>Allow clients to video call you</div>
+              </div>
             </div>
           </div>
 
@@ -436,15 +463,12 @@ export function MessagingPage() {
 
   useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: 'smooth' }) }, [messages])
 
-  // ── SignalR ───────────────────────────────────────────────────────────
+  // ── Socket.io ─────────────────────────────────────────────────────────
   useEffect(() => {
     if (!accessToken) return
-    const conn = new signalR.HubConnectionBuilder()
-      .withUrl('/hubs/chat', { accessTokenFactory: () => accessToken })
-      .withAutomaticReconnect()
-      .build()
+    const chat = createChatConnection(accessToken)
 
-    conn.on('ReceiveMessage', msg => {
+    chat.onReceiveMessage(msg => {
       if (msg.conversationId === activeConv) {
         setMessages(p => {
           const exists = p.some(m => (m.messageId || m.id) === (msg.messageId || msg.id))
@@ -455,15 +479,10 @@ export function MessagingPage() {
       loadConversations()
     })
 
-    conn.on('TypingStarted', ({ conversationId }) => { if (conversationId === activeConv) setIsTyping(true) })
-    conn.on('TypingStopped', ({ conversationId }) => { if (conversationId === activeConv) setIsTyping(false) })
+    if (activeConv) chat.joinConversation(activeConv)
+    connectionRef.current = chat
 
-    conn.start().then(() => {
-      connectionRef.current = conn
-      if (activeConv) conn.invoke('JoinConversation', activeConv).catch(() => {})
-    }).catch(() => {})
-
-    return () => { if (conn.state === 'Connected') conn.stop() }
+    return () => { chat.disconnect() }
   }, [accessToken, activeConv, loadConversations])
 
   // ── Handlers ──────────────────────────────────────────────────────────
@@ -477,8 +496,8 @@ export function MessagingPage() {
       const rId  = replyTo?.messageId || replyTo?.id || null
 
       if (type === 'text' && !url) {
-        if (connectionRef.current?.state === 'Connected')
-          await connectionRef.current.invoke('SendMessage', activeConv, body, 'text', null, rId)
+        if (connectionRef.current)
+          connectionRef.current.sendMessage(activeConv, body)
       } else {
         const { data } = await consultantApi.sendMessage(activeConv, { body, messageType: type, attachmentUrl: url, replyToId: rId })
         setMessages(p => [...p, data.data])
