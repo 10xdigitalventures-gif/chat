@@ -90,6 +90,8 @@ export const consultantApi = {
   markRead: id =>
     api.put(`/consultant/messages/${id}/read`),
 
+  getStats: () => api.get('/consultant/stats'),
+
   uploadAttachment: (id, file) => {
     const fd = new FormData()
     fd.append('file', file)

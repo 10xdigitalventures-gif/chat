@@ -3,7 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { toast } from 'react-hot-toast'
 import { useAuthStore } from '../store/authStore'
 import { consultantApi } from '../api'
-import * as signalR from '@microsoft/signalr'
+import { createChatConnection } from '../socket'
 import {
   ChevronRight, Loader, User, Users, MessageSquare,
   Send, Check, CheckCheck, X, Bell,
@@ -117,15 +117,20 @@ export function DashboardPage() {
   const navigate = useNavigate()
 
   useEffect(() => {
-    Promise.all([
-      consultantApi.getClients(1, 1, ''),
-      consultantApi.getRequests(),
-      consultantApi.getConversations(1, 50),
-    ]).then(([c, r, m]) => setStats({
-      clients: c.data.data?.totalRecords || 0,
-      pending: r.data.data?.length || 0,
-      unread:  (m.data.data?.items || []).reduce((s, c) => s + (c.unreadCount || 0), 0),
-    })).catch(() => {})
+    consultantApi.getStats()
+      .then(r => setStats(r.data.data))
+      .catch(() => {
+        // Fallback if stats API is not yet wired in frontend api.js
+        Promise.all([
+          consultantApi.getClients(1, 1, ''),
+          consultantApi.getRequests(),
+          consultantApi.getConversations(1, 50),
+        ]).then(([c, r, m]) => setStats({
+          clients: c.data.data?.totalRecords || 0,
+          pending: r.data.data?.length || 0,
+          unread:  (m.data.data?.items || []).reduce((s, c) => s + (c.unreadCount || 0), 0),
+        })).catch(() => {})
+      })
   }, [])
 
   return (
@@ -436,15 +441,12 @@ export function MessagingPage() {
 
   useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: 'smooth' }) }, [messages])
 
-  // ── SignalR ───────────────────────────────────────────────────────────
+  // ── Socket.io ─────────────────────────────────────────────────────────
   useEffect(() => {
     if (!accessToken) return
-    const conn = new signalR.HubConnectionBuilder()
-      .withUrl('/hubs/chat', { accessTokenFactory: () => accessToken })
-      .withAutomaticReconnect()
-      .build()
+    const chat = createChatConnection(accessToken)
 
-    conn.on('ReceiveMessage', msg => {
+    chat.onReceiveMessage(msg => {
       if (msg.conversationId === activeConv) {
         setMessages(p => {
           const exists = p.some(m => (m.messageId || m.id) === (msg.messageId || msg.id))
@@ -455,15 +457,10 @@ export function MessagingPage() {
       loadConversations()
     })
 
-    conn.on('TypingStarted', ({ conversationId }) => { if (conversationId === activeConv) setIsTyping(true) })
-    conn.on('TypingStopped', ({ conversationId }) => { if (conversationId === activeConv) setIsTyping(false) })
+    if (activeConv) chat.joinConversation(activeConv)
+    connectionRef.current = chat
 
-    conn.start().then(() => {
-      connectionRef.current = conn
-      if (activeConv) conn.invoke('JoinConversation', activeConv).catch(() => {})
-    }).catch(() => {})
-
-    return () => { if (conn.state === 'Connected') conn.stop() }
+    return () => { chat.disconnect() }
   }, [accessToken, activeConv, loadConversations])
 
   // ── Handlers ──────────────────────────────────────────────────────────
@@ -477,8 +474,8 @@ export function MessagingPage() {
       const rId  = replyTo?.messageId || replyTo?.id || null
 
       if (type === 'text' && !url) {
-        if (connectionRef.current?.state === 'Connected')
-          await connectionRef.current.invoke('SendMessage', activeConv, body, 'text', null, rId)
+        if (connectionRef.current)
+          connectionRef.current.sendMessage(activeConv, body)
       } else {
         const { data } = await consultantApi.sendMessage(activeConv, { body, messageType: type, attachmentUrl: url, replyToId: rId })
         setMessages(p => [...p, data.data])

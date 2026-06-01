@@ -287,6 +287,15 @@ model ConsultantServiceConfig {
   videoRate        Float    @default(0)
   imageRate        Float    @default(0)
   fileRate         Float    @default(0)
+  stripeEnabled    Boolean  @default(false)
+  stripeAccountId  String?
+  jazzCashEnabled  Boolean  @default(false)
+  jazzCashAccount  String?
+  easyPaisaEnabled Boolean  @default(false)
+  easyPaisaAccount String?
+  payFastEnabled   Boolean  @default(false)
+  payFastMerchantId String?
+  payFastSecuredKey String?
 
   consultant       ConsultantProfile @relation(fields: [consultantUserId], references: [userId], onDelete: Cascade)
 }
