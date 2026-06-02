@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react'
+﻿import React, { useState, useEffect, useCallback, useRef } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { toast } from 'react-hot-toast'
 import { useAuthStore } from '../store/authStore'
@@ -11,9 +11,9 @@ import {
   Reply, Search, Filter, Clock, Star, Phone, Info, MoreVertical, Trash2
 } from 'lucide-react'
 
-// ═══════════════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 // LOGIN PAGE
-// ═══════════════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 export function LoginPage() {
   const navigate = useNavigate()
   const { step1, step2, loading } = useAuthStore()
@@ -41,7 +41,7 @@ export function LoginPage() {
     if (!locationId || !fiscalYearId) { toast.error('Select location & fiscal year'); return }
     try {
       const user = await step2({ email, password, locationId, fiscalYearId, connection, rememberMe: false })
-      if (!user.roleName?.toLowerCase().includes('consultant')) {
+      if (!((user.role || user.roleName || '').toLowerCase().includes('consultant'))) {
         toast.error('This portal is for consultants only')
         useAuthStore.getState().logout(); return
       }
@@ -71,12 +71,12 @@ export function LoginPage() {
           <form onSubmit={doStep2}>
             <div className="form-group">
               <label>Password</label>
-              <input type="password" value={password} onChange={e => setPass(e.target.value)} placeholder="••••••••" required autoFocus />
+              <input type="password" value={password} onChange={e => setPass(e.target.value)} placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢" required autoFocus />
             </div>
             <div className="form-group">
               <label>Location</label>
               <select value={locationId} onChange={e => setLoc(e.target.value)} required>
-                <option value="">Select…</option>
+                <option value="">Selectâ€¦</option>
                 {step1Data?.locations?.map(l => <option key={l.id} value={l.id}>{l.locationName}</option>)}
               </select>
             </div>
@@ -84,8 +84,8 @@ export function LoginPage() {
               <div className="form-group">
                 <label>Fiscal Year</label>
                 <select value={fiscalYearId} onChange={e => setFY(e.target.value)} required>
-                  <option value="">Select…</option>
-                  {step1Data?.fiscalYears?.map(f => <option key={f.id} value={f.id}>{f.name}{f.isCurrent ? ' ★' : ''}</option>)}
+                  <option value="">Selectâ€¦</option>
+                  {step1Data?.fiscalYears?.map(f => <option key={f.id} value={f.id}>{f.name}{f.isCurrent ? ' â˜…' : ''}</option>)}
                 </select>
               </div>
               <div className="form-group">
@@ -108,9 +108,9 @@ export function LoginPage() {
   )
 }
 
-// ═══════════════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 // DASHBOARD
-// ═══════════════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 export function DashboardPage() {
   const { user } = useAuthStore()
   const [stats, setStats] = useState({ clients: 0, pending: 0, unread: 0 })
@@ -136,7 +136,7 @@ export function DashboardPage() {
   return (
     <>
       <div className="page-header">
-        <h2>Welcome, {user?.userName?.split(' ')[0]} 👋</h2>
+        <h2>Welcome, {user?.userName?.split(' ')[0]} ðŸ‘‹</h2>
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16, marginBottom: 20 }}>
@@ -164,9 +164,9 @@ export function DashboardPage() {
   )
 }
 
-// ═══════════════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 // PROFILE PAGE
-// ═══════════════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 export function ProfilePage() {
   const [profile, setProfile] = useState(null)
   const [saving, setSaving]   = useState(false)
@@ -266,8 +266,8 @@ export function ProfilePage() {
             </div>
             <p style={{ fontSize: 12, color: 'var(--muted)', marginBottom: 10 }}>{form.bio || 'Your bio will appear here...'}</p>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <span style={{ fontSize: 11, color: 'var(--accent)' }}>PKR {form.hourlyRate || '—'}/hr</span>
-              <span style={{ fontSize: 11, padding: '3px 10px', borderRadius: 99, background: 'var(--accent)22', color: 'var(--accent)' }}>Connect ↗</span>
+              <span style={{ fontSize: 11, color: 'var(--accent)' }}>PKR {form.hourlyRate || 'â€”'}/hr</span>
+              <span style={{ fontSize: 11, padding: '3px 10px', borderRadius: 99, background: 'var(--accent)22', color: 'var(--accent)' }}>Connect â†—</span>
             </div>
           </div>
         </div>
@@ -276,9 +276,9 @@ export function ProfilePage() {
   )
 }
 
-// ═══════════════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 // CLIENTS PAGE
-// ═══════════════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 export function ClientsPage() {
   const [clients, setClients] = useState([])
   const [total, setTotal]     = useState(0)
@@ -304,7 +304,7 @@ export function ClientsPage() {
 
       <div className="card">
         <div style={{ display: 'flex', gap: 8, marginBottom: 16, padding: '8px 12px', background: 'var(--bg3)', border: '1px solid var(--border)', borderRadius: 8 }}>
-          <input placeholder="Search clients…" value={search} onChange={e => { setSearch(e.target.value); setPage(1) }}
+          <input placeholder="Search clientsâ€¦" value={search} onChange={e => { setSearch(e.target.value); setPage(1) }}
             style={{ background: 'none', border: 'none', padding: 0, flex: 1 }} />
         </div>
 
@@ -340,9 +340,9 @@ export function ClientsPage() {
   )
 }
 
-// ═══════════════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 // REQUESTS PAGE
-// ═══════════════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 export function RequestsPage() {
   const [requests, setRequests] = useState([])
   const [loading, setLoading]   = useState(false)
@@ -373,7 +373,7 @@ export function RequestsPage() {
       </div>
 
       <div className="card">
-        {loading && <p style={{ color: 'var(--muted)', textAlign: 'center', padding: 40 }}>Loading…</p>}
+        {loading && <p style={{ color: 'var(--muted)', textAlign: 'center', padding: 40 }}>Loadingâ€¦</p>}
         {!loading && requests.length === 0 && (
           <div style={{ textAlign: 'center', padding: 60, color: 'var(--muted)' }}>
             <Bell size={40} style={{ margin: '0 auto 12px', opacity: 0.3 }} />
@@ -408,9 +408,9 @@ export function RequestsPage() {
   )
 }
 
-// ═══════════════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 // MESSAGING PAGE (CRM STYLE)
-// ═══════════════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 export function MessagingPage() {
   const { id: paramConvId } = useParams()
   const navigate = useNavigate()
@@ -433,7 +433,7 @@ export function MessagingPage() {
 
   const activeConvData = conversations.find(c => c.conversationId === activeConv)
 
-  // ── Data Loading ──────────────────────────────────────────────────────
+  // â”€â”€ Data Loading â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const loadConversations = useCallback(async () => {
     try {
       const { data } = await consultantApi.getConversations(1, 100)
@@ -463,7 +463,7 @@ export function MessagingPage() {
 
   useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: 'smooth' }) }, [messages])
 
-  // ── Socket.io ─────────────────────────────────────────────────────────
+  // â”€â”€ Socket.io â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   useEffect(() => {
     if (!accessToken) return
     const chat = createChatConnection(accessToken)
@@ -485,7 +485,7 @@ export function MessagingPage() {
     return () => { chat.disconnect() }
   }, [accessToken, activeConv, loadConversations])
 
-  // ── Handlers ──────────────────────────────────────────────────────────
+  // â”€â”€ Handlers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const handleSend = async () => {
     if (!activeConv || (!text.trim() && !pendingFile) || sending) return
     setSending(true)
@@ -645,9 +645,9 @@ export function MessagingPage() {
   )
 }
 
-// ─────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // EXPORT ALL PAGES
-// ─────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export const AllPages = {
   LoginPage,
@@ -657,3 +657,6 @@ export const AllPages = {
   RequestsPage,
   MessagingPage
 }
+
+
+

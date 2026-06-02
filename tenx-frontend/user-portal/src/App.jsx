@@ -1,4 +1,4 @@
-import { ReviewsPage, ConsultantAvailabilityPage, UserNotificationsPage, ForgotPasswordPage } from './pages/PartBPages'
+﻿import { ReviewsPage, ConsultantAvailabilityPage, UserNotificationsPage, ForgotPasswordPage } from './pages/PartBPages'
 import { ConsultantDirectPage } from './pages/ConsultantDirectPage'
 import BillingPage from './pages/BillingPage'
 import React, { useState, useEffect, useCallback, useRef } from 'react'
@@ -13,7 +13,7 @@ import {
   Reply, LayoutDashboard, Calendar, Bell, Filter, Clock, Phone, Info, MoreVertical, Trash2, Users
 } from 'lucide-react'
 
-/* ── User Sidebar & Layout ────────────────────────────────────────────────── */
+/* â”€â”€ User Sidebar & Layout â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 const userNav = [
   { section: 'Dashboard' },
   { label: 'Marketplace',   icon: LayoutDashboard, path: '/' },
@@ -55,7 +55,7 @@ function UserLayout() {
         <div className="sidebar-search-box">
           <Search className="search-icon" size={14} />
           <input placeholder="Search consultants..." />
-          <span className="kbd">⌘K</span>
+          <span className="kbd">âŒ˜K</span>
         </div>
 
         <nav className="sidebar-nav-premium">
@@ -104,9 +104,9 @@ function UserLayout() {
   )
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// HOME — Consultant Directory
-// ─────────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// HOME â€” Consultant Directory
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function HomePage() {
   const [consultants, setConsultants] = useState([])
   const [total, setTotal]             = useState(0)
@@ -123,8 +123,11 @@ function HomePage() {
     setLoading(true)
     try {
       const { data } = await userApi.getConsultants(page, 12, query)
-      setConsultants(data.data?.items || [])
-      setTotal(data.data?.totalRecords || 0)
+const payload = data.data
+const items = Array.isArray(payload) ? payload : (payload?.items || [])
+const totalCount = data.total ?? payload?.totalRecords ?? payload?.total ?? items.length
+setConsultants(items)
+setTotal(totalCount)
     } catch { } finally { setLoading(false) }
   }, [page, query])
 
@@ -147,14 +150,14 @@ function HomePage() {
   return (
     <div style={{ minHeight: '100vh' }}>
       <div style={{ maxWidth: 1100, margin: '0 auto', padding: '0 20px' }}>
-        {/* ── HERO ── */}
+        {/* â”€â”€ HERO â”€â”€ */}
         <div className="hero">
           <h1>Find Expert <span>Consultants</span><br />for Your Business</h1>
           <p>Connect with verified professionals across strategy, finance, marketing, tech and more.</p>
           <div className="search-wrap">
             <input
               className="search-input"
-              placeholder="Search by name, specialization…"
+              placeholder="Search by name, specializationâ€¦"
               value={search}
               onChange={e => setSearch(e.target.value)}
               onKeyDown={e => e.key === 'Enter' && setQuery(search)}
@@ -165,14 +168,14 @@ function HomePage() {
           </div>
         </div>
 
-        {/* ── STATS ── */}
+        {/* â”€â”€ STATS â”€â”€ */}
         <div style={{ display: 'flex', justifyContent: 'center', gap: 40, marginBottom: 40, color: 'var(--muted)', fontSize: 13 }}>
           <span><strong style={{ color: 'var(--text)', fontFamily: 'var(--font-head)', fontSize: 20 }}>{total}</strong> Consultants</span>
           <span><strong style={{ color: 'var(--text)', fontFamily: 'var(--font-head)', fontSize: 20 }}>3</strong> Portals</span>
-          <span><strong style={{ color: 'var(--text)', fontFamily: 'var(--font-head)', fontSize: 20 }}>∞</strong> Possibilities</span>
+          <span><strong style={{ color: 'var(--text)', fontFamily: 'var(--font-head)', fontSize: 20 }}>âˆž</strong> Possibilities</span>
         </div>
 
-        {/* ── GRID ── */}
+        {/* â”€â”€ GRID â”€â”€ */}
         {loading ? (
           <div style={{ textAlign: 'center', padding: 60, color: 'var(--muted)' }}><Loader size={24} className="spin" style={{ margin: '0 auto' }} /></div>
         ) : consultants.length === 0 ? (
@@ -189,7 +192,7 @@ function HomePage() {
                 <div className="card-spec">{c.specialization || 'Consultant'}</div>
                 <div className="card-bio">{c.bio || 'Expert consultant available for consultation.'}</div>
                 {c.experience && (
-                  <div style={{ fontSize: 12, color: 'var(--muted)', marginBottom: 10 }}>📅 {c.experience}</div>
+                  <div style={{ fontSize: 12, color: 'var(--muted)', marginBottom: 10 }}>ðŸ“… {c.experience}</div>
                 )}
                 <div className="card-meta">
                   <div className="card-rate">
@@ -197,17 +200,17 @@ function HomePage() {
                   </div>
                   {c.connectionStatus === 'accepted' ? (
                     <button className="connect-btn connected" onClick={e => { e.stopPropagation(); navigate('/messages') }}>
-                      Chat ↗
+                      Chat â†—
                     </button>
                   ) : c.connectionStatus === 'pending' ? (
-                    <button className="connect-btn pending" disabled>Pending…</button>
+                    <button className="connect-btn pending" disabled>Pendingâ€¦</button>
                     ) : (
                       <button
                         className="connect-btn"
                         disabled={connecting === c.userId}
                         onClick={e => handleConnect(c.userId, e)}
                       >
-                        {connecting === c.userId ? <Loader size={11} className="spin" /> : 'Consult Now ↗'}
+                        {connecting === c.userId ? <Loader size={11} className="spin" /> : 'Consult Now â†—'}
                       </button>
                     )}
                 </div>
@@ -216,7 +219,7 @@ function HomePage() {
           </div>
         )}
 
-        {/* ── PAGINATION ── */}
+        {/* â”€â”€ PAGINATION â”€â”€ */}
         {total > 12 && (
           <div style={{ display: 'flex', justifyContent: 'center', gap: 8, marginTop: 40 }}>
             {Array.from({ length: Math.ceil(total / 12) }, (_, i) => i + 1).slice(0, 7).map(p => (
@@ -230,7 +233,7 @@ function HomePage() {
         <div style={{ height: 60 }} />
       </div>
 
-      {/* ── CONSULTANT DETAIL MODAL ── */}
+      {/* â”€â”€ CONSULTANT DETAIL MODAL â”€â”€ */}
       {selected && (
         <div className="modal-overlay" onClick={e => e.target === e.currentTarget && setSelected(null)}>
           <div className="modal">
@@ -249,9 +252,9 @@ function HomePage() {
             <div className="modal-body">
               <div style={{ display: 'flex', gap: 12, marginBottom: 16 }}>
                 <span className={`badge ${selected.isOnline ? 'badge-green' : 'badge-blue'}`}>
-                  {selected.isOnline ? '🟢 Online' : '⚫ Offline'}
+                  {selected.isOnline ? 'ðŸŸ¢ Online' : 'âš« Offline'}
                 </span>
-                {selected.timezone && <span className="badge badge-blue">🕐 {selected.timezone}</span>}
+                {selected.timezone && <span className="badge badge-blue">ðŸ• {selected.timezone}</span>}
               </div>
               {selected.bio && <p style={{ color: 'var(--muted)', lineHeight: 1.7, marginBottom: 16 }}>{selected.bio}</p>}
               {selected.experience && <p style={{ fontSize: 13, marginBottom: 8 }}><strong>Experience:</strong> {selected.experience}</p>}
@@ -264,9 +267,9 @@ function HomePage() {
             <div className="modal-footer">
               <button className="btn btn-ghost" onClick={() => setSelected(null)}>Close</button>
               {selected.connectionStatus === 'accepted' ? (
-                <button className="btn btn-primary" onClick={() => { setSelected(null); navigate('/messages') }}>Open Chat ↗</button>
+                <button className="btn btn-primary" onClick={() => { setSelected(null); navigate('/messages') }}>Open Chat â†—</button>
               ) : selected.connectionStatus === 'pending' ? (
-                <button className="btn" disabled style={{ background: '#f59e0b', color: '#fff' }}>Request Pending…</button>
+                <button className="btn" disabled style={{ background: '#f59e0b', color: '#fff' }}>Request Pendingâ€¦</button>
               ) : (
                 <button className="btn btn-primary" disabled={connecting === selected.userId}
                   onClick={async e => { await handleConnect(selected.userId, e); }}>
@@ -281,9 +284,9 @@ function HomePage() {
   )
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // LOGIN PAGE
-// ─────────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function LoginPage() {
   const navigate = useNavigate()
   const { step1, step2, loading, step1Data } = useAuthStore()
@@ -314,7 +317,7 @@ function LoginPage() {
     } catch (err) { toast.error(err.message) }
   }
 
-  // ── Social Login (Firebase) ─────────────────────────────────────────────
+  // â”€â”€ Social Login (Firebase) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const handleSocialLogin = async (providerFn, providerName) => {
     setSocialLoading(providerName)
     try {
@@ -352,7 +355,7 @@ function LoginPage() {
                 {loading ? <Loader size={14} className="spin" /> : <>Continue <ChevronRight size={14} /></>}
               </button>
 
-              {/* ── Social Login Divider ── */}
+              {/* â”€â”€ Social Login Divider â”€â”€ */}
               <div style={{ display: 'flex', alignItems: 'center', gap: 12, margin: '20px 0 16px' }}>
                 <div style={{ flex: 1, height: 1, background: 'var(--border)' }} />
                 <span style={{ fontSize: 12, color: 'var(--muted)', whiteSpace: 'nowrap' }}>or continue with</span>
@@ -386,7 +389,7 @@ function LoginPage() {
               <div className="form-group">
                 <label>Location</label>
                 <select value={locId} onChange={e => setLoc(e.target.value)} required>
-                  <option value="">Select…</option>
+                  <option value="">Selectâ€¦</option>
                   {step1Data?.locations?.map(l => <option key={l.id} value={l.id}>{l.locationName}</option>)}
                 </select>
               </div>
@@ -394,8 +397,8 @@ function LoginPage() {
                 <div className="form-group">
                   <label>Fiscal Year</label>
                   <select value={fyId} onChange={e => setFY(e.target.value)} required>
-                    <option value="">Select…</option>
-                    {step1Data?.fiscalYears?.map(f => <option key={f.id} value={f.id}>{f.name}{f.isCurrent ? ' ★' : ''}</option>)}
+                    <option value="">Selectâ€¦</option>
+                    {step1Data?.fiscalYears?.map(f => <option key={f.id} value={f.id}>{f.name}{f.isCurrent ? ' â˜…' : ''}</option>)}
                   </select>
                 </div>
                 <div className="form-group">
@@ -419,9 +422,9 @@ function LoginPage() {
   )
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // PROFILE PAGE
-// ─────────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function ProfilePage() {
   const { user } = useAuthStore()
   const [profile, setProfile] = useState(null)
@@ -449,7 +452,7 @@ function ProfilePage() {
 
         <div className="card" style={{ maxWidth: 540 }}>
           {[
-            ['bio',         'Bio',          'Tell consultants about yourself…', 'textarea'],
+            ['bio',         'Bio',          'Tell consultants about yourselfâ€¦', 'textarea'],
             ['companyName', 'Company Name', 'Your company'],
             ['industry',    'Industry',     'e.g. Retail, Tech, Healthcare'],
             ['cityName',    'City',         'e.g. Karachi'],
@@ -467,9 +470,9 @@ function ProfilePage() {
   )
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// MESSAGES PAGE — with SignalR real-time
-// ─────────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// MESSAGES PAGE â€” with SignalR real-time
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function MessagesPage() {
   const { id: paramId } = useParams()
   const navigate = useNavigate()
@@ -769,9 +772,9 @@ function MessagesPage() {
   )
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // APP ROUTER
-// ─────────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 export default function App() {
   const isLoggedIn = useAuthStore(s => s.isLoggedIn())
 
@@ -796,3 +799,5 @@ export default function App() {
     </>
   )
 }
+
+

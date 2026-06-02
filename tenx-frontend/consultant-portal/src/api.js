@@ -1,4 +1,4 @@
-import axios from 'axios'
+﻿import axios from 'axios'
 
 // Use Vite proxy
 const BASE = import.meta.env.VITE_API_URL || '/api'
@@ -7,14 +7,14 @@ export const api = axios.create({
   baseURL: BASE
 })
 
-// ── Attach JWT automatically ─────────────────────────
+// â”€â”€ Attach JWT automatically â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 api.interceptors.request.use(cfg => {
   const token = localStorage.getItem('accessToken')
   if (token) cfg.headers.Authorization = `Bearer ${token}`
   return cfg
 })
 
-// ── Refresh token on 401 ─────────────────────────────
+// â”€â”€ Refresh token on 401 â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 api.interceptors.response.use(
   r => r,
   async err => {
@@ -45,7 +45,7 @@ api.interceptors.response.use(
 )
 
 
-// ── AUTH ─────────────────────────────────────────────
+// â”€â”€ AUTH â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 export const authApi = {
   step1: email => api.post('/auth/login/step1', { email }),
   step2: body  => api.post('/auth/login/step2', body),
@@ -59,7 +59,7 @@ export const authApi = {
 }
 
 
-// ── CONSULTANT ───────────────────────────────────────
+// â”€â”€ CONSULTANT â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 export const consultantApi = {
   getProfile: () => api.get('/consultant/profile'),
   updateProfile: body => api.put('/consultant/profile', body),
@@ -102,7 +102,7 @@ export const consultantApi = {
 }
 
 
-// ── AVAILABILITY ─────────────────────────────────────
+// â”€â”€ AVAILABILITY â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 export const availApi = {
   get: () => api.get('/consultant/availability'),
   save: slots => api.put('/consultant/availability', slots),
@@ -110,7 +110,7 @@ export const availApi = {
 }
 
 
-// ── NOTIFICATIONS ────────────────────────────────────
+// â”€â”€ NOTIFICATIONS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 export const notifApi = {
   getAll: unreadOnly =>
     api.get('/consultant/notifications', {

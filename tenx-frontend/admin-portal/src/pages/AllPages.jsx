@@ -1,13 +1,13 @@
-// ═══════════════════════════════════════════════════════════════════════════
-//  ALL ADMIN PAGES — DashboardPage, UsersPage, RolesPage, LocationsPage,
+﻿// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+//  ALL ADMIN PAGES â€” DashboardPage, UsersPage, RolesPage, LocationsPage,
 //                    SettingsPage, ErrorLogsPage, DataConstantsPage
-// ═══════════════════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 import React, { useState, useEffect, useCallback } from 'react'
 import { toast } from 'react-hot-toast'
 import { Search, Plus, Pencil, Trash2, X, RefreshCw, Eye, Users, Shield, MapPin, AlertTriangle, Settings, Gift } from 'lucide-react'
 import { userApi, roleApi, locationApi, settingsApi, errorLogApi, dataApi, consultantConfigApi, creditsApi } from '../api'
 
-// ── REUSABLE COMPONENTS ───────────────────────────────────────────────────────
+// â”€â”€ REUSABLE COMPONENTS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function Modal({ open, title, onClose, children, footer }) {
   if (!open) return null
@@ -49,7 +49,7 @@ function ConfirmDelete({ open, name, onConfirm, onClose }) {
   )
 }
 
-// ── DASHBOARD ─────────────────────────────────────────────────────────────────
+// â”€â”€ DASHBOARD â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 export function DashboardPage() {
   const [stats, setStats] = useState({ users: 0, roles: 0, locations: 0, errors: 0 })
 
@@ -103,7 +103,7 @@ export function DashboardPage() {
   )
 }
 
-// ── USERS ─────────────────────────────────────────────────────────────────────
+// â”€â”€ USERS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 export function UsersPage() {
   const [users, setUsers]       = useState([])
   const [total, setTotal]       = useState(0)
@@ -115,7 +115,7 @@ export function UsersPage() {
   const [form, setForm]         = useState({ userName: '', loginId: '', email: '', password: '', cellNo: '', isActive: true })
   const [roles, setRoles]       = useState([])
 
-  // ── Consultant Config State ──
+  // â”€â”€ Consultant Config State â”€â”€
   const [configTab, setConfigTab]   = useState('services')
   const [configData, setConfigData] = useState(null)
   const [configSaving, setConfigSaving] = useState(false)
@@ -136,7 +136,7 @@ export function UsersPage() {
   const openEdit   = u => { setSelected(u); setForm({ userName: u.userName, email: u.email, cellNo: u.cellNo || '', roleId: u.roleId || '', isActive: u.isActive }); setModal('edit') }
   const openDelete = u => { setSelected(u); setModal('delete') }
 
-  // ── Open Consultant Config ⚙️ ──
+  // â”€â”€ Open Consultant Config âš™ï¸ â”€â”€
   const openConfig = async (u) => {
     setSelected(u)
     setConfigTab('services')
@@ -168,7 +168,7 @@ export function UsersPage() {
     return r.includes('client') || r.includes('web')
   }
 
-  // ── Grant Credits State ──
+  // â”€â”€ Grant Credits State â”€â”€
   const [grantData, setGrantData] = useState({ textChars: 0, audioMins: 0, videoMins: 0, fileCredits: 0 })
   const [grantSaving, setGrantSaving] = useState(false)
 
@@ -211,7 +211,7 @@ export function UsersPage() {
     </div>
   )
 
-  // ── Config field helper ──
+  // â”€â”€ Config field helper â”€â”€
   const Cf = (field, label, type = 'checkbox') => {
     if (type === 'checkbox') return (
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 0' }}>
@@ -246,7 +246,7 @@ export function UsersPage() {
       <div className="card">
         <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
           <div className="search-bar" style={{ flex: 1 }}>
-            <Search /><input placeholder="Search by name, email, login ID…" value={search}
+            <Search /><input placeholder="Search by name, email, login IDâ€¦" value={search}
               onChange={e => { setSearch(e.target.value); setPage(1) }} />
           </div>
           <button className="btn-icon" onClick={load}><RefreshCw size={14} /></button>
@@ -257,7 +257,7 @@ export function UsersPage() {
             <thead><tr><th>Name</th><th>Email</th><th>Login ID</th><th>Role</th><th>Status</th><th>Actions</th></tr></thead>
             <tbody>
               {loading ? (
-                <tr><td colSpan={6} style={{ textAlign: 'center', padding: 40, color: 'var(--muted)' }}>Loading…</td></tr>
+                <tr><td colSpan={6} style={{ textAlign: 'center', padding: 40, color: 'var(--muted)' }}>Loadingâ€¦</td></tr>
               ) : users.length === 0 ? (
                 <tr><td colSpan={6}><div className="empty"><Users /><p>No users found</p></div></td></tr>
               ) : users.map(u => (
@@ -265,7 +265,7 @@ export function UsersPage() {
                   <td><div style={{ fontWeight: 500 }}>{u.userName}</div></td>
                   <td className="td-muted">{u.email}</td>
                   <td className="td-muted">{u.loginId}</td>
-                  <td><span className="badge badge-purple">{u.roleName || '—'}</span></td>
+                  <td><span className="badge badge-purple">{u.roleName || 'â€”'}</span></td>
                   <td><span className={`dot ${u.isActive ? 'dot-green' : 'dot-red'}`} /></td>
                   <td>
                     <div style={{ display: 'flex', gap: 4 }}>
@@ -299,7 +299,7 @@ export function UsersPage() {
         <F name="email" label="Email" type="email" placeholder="john@company.com" />
         {modal === 'create' && <F name="password" label="Password" type="password" />}
         <div className="grid-2">
-          <F name="cellNo" label="Cell No" placeholder="+92300…" />
+          <F name="cellNo" label="Cell No" placeholder="+92300â€¦" />
           <div className="form-group">
             <label>Role</label>
             <select value={form.roleId || ''} onChange={e => setForm(f => ({ ...f, roleId: e.target.value }))}>
@@ -319,30 +319,30 @@ export function UsersPage() {
         )}
       </Modal>
 
-      {/* ── CONSULTANT CONFIG MODAL ⚙️ ── */}
-      <Modal open={modal === 'config'} title={`⚙️ ${selected?.userName || ''} — Consultant Settings`}
+      {/* â”€â”€ CONSULTANT CONFIG MODAL âš™ï¸ â”€â”€ */}
+      <Modal open={modal === 'config'} title={`âš™ï¸ ${selected?.userName || ''} â€” Consultant Settings`}
         onClose={() => setModal(null)}
         footer={<>
           <button className="btn btn-ghost" onClick={() => setModal(null)}>Cancel</button>
           <button className="btn btn-primary" onClick={saveConfig} disabled={configSaving}>
-            {configSaving ? 'Saving…' : 'Save Settings'}
+            {configSaving ? 'Savingâ€¦' : 'Save Settings'}
           </button>
         </>}>
 
         {!configData ? (
-          <div style={{ textAlign: 'center', padding: 30, color: 'var(--muted)' }}>Loading config…</div>
+          <div style={{ textAlign: 'center', padding: 30, color: 'var(--muted)' }}>Loading configâ€¦</div>
         ) : (
           <>
             {/* Tab Bar */}
             <div className="tab-bar" style={{ marginBottom: 16 }}>
-              {[['services', '📱 Services'], ['pricing', '💰 Pricing'], ['gateways', '🏦 Payment Gateways']].map(([key, label]) => (
+              {[['services', 'ðŸ“± Services'], ['pricing', 'ðŸ’° Pricing'], ['gateways', 'ðŸ¦ Payment Gateways']].map(([key, label]) => (
                 <button key={key} className={`tab ${configTab === key ? 'active' : ''}`} onClick={() => setConfigTab(key)}>
                   {label}
                 </button>
               ))}
             </div>
 
-            {/* ── Tab 1: Services ── */}
+            {/* â”€â”€ Tab 1: Services â”€â”€ */}
             {configTab === 'services' && (
               <div>
                 <p style={{ fontSize: 12, color: 'var(--muted)', marginBottom: 12 }}>Enable or disable message types and calling features this consultant can receive from clients.</p>
@@ -352,13 +352,13 @@ export function UsersPage() {
                 {Cf('imageEnabled', 'Image / Photo')}
                 {Cf('fileEnabled', 'File Attachments')}
                 <div style={{ marginTop: 12, paddingTop: 12, borderTop: '1px solid var(--border)' }}>
-                  {Cf('voiceEnabled', '🎙️ Voice Calling')}
-                  {Cf('videoEnabled', '🎥 Video Calling')}
+                  {Cf('voiceEnabled', 'ðŸŽ™ï¸ Voice Calling')}
+                  {Cf('videoEnabled', 'ðŸŽ¥ Video Calling')}
                 </div>
               </div>
             )}
 
-            {/* ── Tab 2: Pricing ── */}
+            {/* â”€â”€ Tab 2: Pricing â”€â”€ */}
             {configTab === 'pricing' && (
               <div>
                 <p style={{ fontSize: 12, color: 'var(--muted)', marginBottom: 12 }}>Override global rates for this consultant. Leave empty to use the default global rate.</p>
@@ -380,14 +380,14 @@ export function UsersPage() {
               </div>
             )}
 
-            {/* ── Tab 3: Payment Gateways ── */}
+            {/* â”€â”€ Tab 3: Payment Gateways â”€â”€ */}
             {configTab === 'gateways' && (
               <div>
                 <p style={{ fontSize: 12, color: 'var(--muted)', marginBottom: 12 }}>Enable payment methods clients can use when paying this consultant.</p>
 
-                {Cf('stripeEnabled', '💳 Stripe (Card — Visa/MasterCard)')}
-                {Cf('jazzCashEnabled', '📱 JazzCash (Mobile Wallet / OTC)')}
-                {Cf('easyPaisaEnabled', '📱 EasyPaisa (Mobile Account / OTC)')}
+                {Cf('stripeEnabled', 'ðŸ’³ Stripe (Card â€” Visa/MasterCard)')}
+                {Cf('jazzCashEnabled', 'ðŸ“± JazzCash (Mobile Wallet / OTC)')}
+                {Cf('easyPaisaEnabled', 'ðŸ“± EasyPaisa (Mobile Account / OTC)')}
 
                 <div style={{ marginTop: 16, padding: '12px 0', borderTop: '1px solid var(--border)' }}>
                   <p style={{ fontSize: 12, color: 'var(--muted)', marginBottom: 10 }}>Payout Accounts (for consultant earnings)</p>
@@ -405,13 +405,13 @@ export function UsersPage() {
         )}
       </Modal>
 
-      {/* ── GRANT FREE CREDITS MODAL 🎁 ── */}
-      <Modal open={modal === 'grant'} title={`🎁 Grant Credits — ${selected?.userName || ''}`}
+      {/* â”€â”€ GRANT FREE CREDITS MODAL ðŸŽ â”€â”€ */}
+      <Modal open={modal === 'grant'} title={`ðŸŽ Grant Credits â€” ${selected?.userName || ''}`}
         onClose={() => setModal(null)}
         footer={<>
           <button className="btn btn-ghost" onClick={() => setModal(null)}>Cancel</button>
           <button className="btn btn-primary" onClick={saveGrant} disabled={grantSaving}>
-            {grantSaving ? 'Granting…' : 'Grant Credits'}
+            {grantSaving ? 'Grantingâ€¦' : 'Grant Credits'}
           </button>
         </>}>
         <p style={{ fontSize: 12, color: 'var(--muted)', marginBottom: 16 }}>
@@ -419,19 +419,19 @@ export function UsersPage() {
         </p>
         <div className="grid-2" style={{ gap: 10 }}>
           <div className="form-group" style={{ marginBottom: 8 }}>
-            <label style={{ fontSize: 12 }}>📝 Text (characters)</label>
+            <label style={{ fontSize: 12 }}>ðŸ“ Text (characters)</label>
             <input type="number" min="0" value={grantData.textChars || ''} onChange={e => setGrantData(d => ({ ...d, textChars: Number(e.target.value) || 0 }))} placeholder="e.g. 5000" />
           </div>
           <div className="form-group" style={{ marginBottom: 8 }}>
-            <label style={{ fontSize: 12 }}>🎙️ Audio (minutes)</label>
+            <label style={{ fontSize: 12 }}>ðŸŽ™ï¸ Audio (minutes)</label>
             <input type="number" min="0" step="0.5" value={grantData.audioMins || ''} onChange={e => setGrantData(d => ({ ...d, audioMins: Number(e.target.value) || 0 }))} placeholder="e.g. 10" />
           </div>
           <div className="form-group" style={{ marginBottom: 8 }}>
-            <label style={{ fontSize: 12 }}>🎬 Video (minutes)</label>
+            <label style={{ fontSize: 12 }}>ðŸŽ¬ Video (minutes)</label>
             <input type="number" min="0" step="0.5" value={grantData.videoMins || ''} onChange={e => setGrantData(d => ({ ...d, videoMins: Number(e.target.value) || 0 }))} placeholder="e.g. 5" />
           </div>
           <div className="form-group" style={{ marginBottom: 8 }}>
-            <label style={{ fontSize: 12 }}>📎 Files (count)</label>
+            <label style={{ fontSize: 12 }}>ðŸ“Ž Files (count)</label>
             <input type="number" min="0" value={grantData.fileCredits || ''} onChange={e => setGrantData(d => ({ ...d, fileCredits: Number(e.target.value) || 0 }))} placeholder="e.g. 10" />
           </div>
         </div>
@@ -442,7 +442,7 @@ export function UsersPage() {
   )
 }
 
-// ── ROLES ─────────────────────────────────────────────────────────────────────
+// â”€â”€ ROLES â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 export function RolesPage() {
   const [roles, setRoles]       = useState([])
   const [total, setTotal]       = useState(0)
@@ -480,7 +480,7 @@ export function RolesPage() {
       <div className="card">
         <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
           <div className="search-bar" style={{ flex: 1 }}><Search />
-            <input placeholder="Search roles…" value={search} onChange={e => { setSearch(e.target.value); setPage(1) }} />
+            <input placeholder="Search rolesâ€¦" value={search} onChange={e => { setSearch(e.target.value); setPage(1) }} />
           </div>
         </div>
         <div className="table-wrap">
@@ -515,7 +515,7 @@ export function RolesPage() {
   )
 }
 
-// ── LOCATIONS ─────────────────────────────────────────────────────────────────
+// â”€â”€ LOCATIONS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 export function LocationsPage() {
   const [locs, setLocs]         = useState([])
   const [total, setTotal]       = useState(0)
@@ -554,7 +554,7 @@ export function LocationsPage() {
       </div>
       <div className="card">
         <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
-          <div className="search-bar" style={{ flex: 1 }}><Search /><input placeholder="Search…" value={search} onChange={e => { setSearch(e.target.value); setPage(1) }} /></div>
+          <div className="search-bar" style={{ flex: 1 }}><Search /><input placeholder="Searchâ€¦" value={search} onChange={e => { setSearch(e.target.value); setPage(1) }} /></div>
         </div>
         <div className="table-wrap">
           <table>
@@ -564,7 +564,7 @@ export function LocationsPage() {
                 <tr key={l.id}>
                   <td style={{ fontWeight: 500 }}>{l.locationName}</td>
                   <td><span className="badge badge-gray">{l.locationTypeName}</span></td>
-                  <td className="td-muted">{l.locationAddress || '—'}</td>
+                  <td className="td-muted">{l.locationAddress || 'â€”'}</td>
                   <td><span className={`badge ${l.isActive ? 'badge-green' : 'badge-red'}`}>{l.isActive ? 'Active' : 'Inactive'}</span></td>
                   <td><div style={{ display: 'flex', gap: 4 }}>
                     <button className="btn-icon" onClick={() => { setSelected(l); setForm({ locationName: l.locationName, locationTypeId: l.locationTypeId || '', locationAddress: l.locationAddress || '', isActive: l.isActive }); setModal('edit') }}><Pencil /></button>
@@ -584,7 +584,7 @@ export function LocationsPage() {
         <div className="form-group"><label>Location Name</label><input value={form.locationName} onChange={e => setForm(f => ({ ...f, locationName: e.target.value }))} /></div>
         <div className="form-group"><label>Location Type</label>
           <select value={form.locationTypeId} onChange={e => setForm(f => ({ ...f, locationTypeId: e.target.value }))}>
-            <option value="">Select type…</option>
+            <option value="">Select typeâ€¦</option>
             {locTypes.map(t => <option key={t.id} value={t.id}>{t.locationTypeName}</option>)}
           </select>
         </div>
@@ -599,7 +599,7 @@ export function LocationsPage() {
   )
 }
 
-// ── SETTINGS ──────────────────────────────────────────────────────────────────
+// â”€â”€ SETTINGS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 export function SettingsPage() {
   const [tab, setTab]     = useState('website')
   const [data, setData]   = useState(null)
@@ -619,7 +619,7 @@ export function SettingsPage() {
     finally { setSaving(false) }
   }
 
-  if (!data) return <div style={{ color: 'var(--muted)' }}>Loading settings…</div>
+  if (!data) return <div style={{ color: 'var(--muted)' }}>Loading settingsâ€¦</div>
 
   return (
     <>
@@ -640,14 +640,14 @@ export function SettingsPage() {
               <input type="checkbox" checked={data.isWebsiteOnline} onChange={e => setData(d => ({ ...d, isWebsiteOnline: e.target.checked }))} />
               <span className="toggle-slider" />
             </label>
-            <span style={{ fontWeight: 500 }}>{data.isWebsiteOnline ? '🟢 Website Online' : '🔴 Website Offline'}</span>
+            <span style={{ fontWeight: 500 }}>{data.isWebsiteOnline ? 'ðŸŸ¢ Website Online' : 'ðŸ”´ Website Offline'}</span>
           </div>
           <div className="form-group">
             <label>Footer Description</label>
             <textarea rows={4} value={data.footerDescription || ''} onChange={e => setData(d => ({ ...d, footerDescription: e.target.value }))} />
           </div>
           <button className="btn btn-primary" disabled={saving} onClick={() => save({ isWebsiteOnline: data.isWebsiteOnline, footerDescription: data.footerDescription })}>
-            {saving ? 'Saving…' : 'Save Changes'}
+            {saving ? 'Savingâ€¦' : 'Save Changes'}
           </button>
         </div>
       )}
@@ -663,7 +663,7 @@ export function SettingsPage() {
           ))}
           <button className="btn btn-primary" disabled={saving}
             onClick={() => save({ businessName: data.businessName, businessNature: data.businessNature, businessProvince: data.businessProvince, fbrToken: data.fbrToken, validationToken: data.validationToken })}>
-            {saving ? 'Saving…' : 'Save Changes'}
+            {saving ? 'Savingâ€¦' : 'Save Changes'}
           </button>
         </div>
       )}
@@ -674,15 +674,15 @@ export function SettingsPage() {
           <div className="form-group"><label>Chat Link URL</label>
             <input value={data.chatLinkUrl || ''} onChange={e => setData(d => ({ ...d, chatLinkUrl: e.target.value }))} placeholder="https://consultant.10xdigitalventures.com/login" />
           </div>
-          <p style={{ color: 'var(--muted)', fontSize: 12, marginTop: 8 }}>Consultant default role: <strong style={{ color: 'var(--text)' }}>{data.consultantDefaultRoleName || '—'}</strong></p>
-          <p style={{ color: 'var(--muted)', fontSize: 12, marginTop: 4 }}>Client default role: <strong style={{ color: 'var(--text)' }}>{data.clientDefaultRoleName || '—'}</strong></p>
+          <p style={{ color: 'var(--muted)', fontSize: 12, marginTop: 8 }}>Consultant default role: <strong style={{ color: 'var(--text)' }}>{data.consultantDefaultRoleName || 'â€”'}</strong></p>
+          <p style={{ color: 'var(--muted)', fontSize: 12, marginTop: 4 }}>Client default role: <strong style={{ color: 'var(--text)' }}>{data.clientDefaultRoleName || 'â€”'}</strong></p>
         </div>
       )}
     </>
   )
 }
 
-// ── ERROR LOGS ────────────────────────────────────────────────────────────────
+// â”€â”€ ERROR LOGS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 export function ErrorLogsPage() {
   const [logs, setLogs]         = useState([])
   const [total, setTotal]       = useState(0)
@@ -707,7 +707,7 @@ export function ErrorLogsPage() {
       <div className="page-header"><h2>Error Logs</h2></div>
       <div className="card">
         <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
-          <div className="search-bar" style={{ flex: 1 }}><Search /><input placeholder="Search errors…" value={search} onChange={e => { setSearch(e.target.value); setPage(1) }} /></div>
+          <div className="search-bar" style={{ flex: 1 }}><Search /><input placeholder="Search errorsâ€¦" value={search} onChange={e => { setSearch(e.target.value); setPage(1) }} /></div>
         </div>
         <div className="table-wrap">
           <table>
@@ -748,7 +748,7 @@ export function ErrorLogsPage() {
   )
 }
 
-// ── DATA CONSTANTS ────────────────────────────────────────────────────────────
+// â”€â”€ DATA CONSTANTS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 export function DataConstantsPage() {
   const [tab, setTab] = useState('controlTypes')
   const [items, setItems] = useState([])
@@ -796,7 +796,7 @@ export function DataConstantsPage() {
       </div>
       <div className="card">
         <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
-          <div className="search-bar" style={{ flex: 1 }}><Search /><input placeholder={`Search ${cfg.label.toLowerCase()}…`} value={search} onChange={e => setSearch(e.target.value)} /></div>
+          <div className="search-bar" style={{ flex: 1 }}><Search /><input placeholder={`Search ${cfg.label.toLowerCase()}â€¦`} value={search} onChange={e => setSearch(e.target.value)} /></div>
           <button className="btn btn-primary btn-sm" onClick={() => { setForm({}); setModal('create') }}><Plus size={13} /> Add</button>
         </div>
         <div className="table-wrap">
@@ -805,7 +805,7 @@ export function DataConstantsPage() {
             <tbody>
               {items.map(item => (
                 <tr key={item.id}>
-                  {cfg.fields.map(([k]) => <td key={k} style={{ fontSize: 13 }}>{item[k.charAt(0).toLowerCase() + k.slice(1)] || item[k] || '—'}</td>)}
+                  {cfg.fields.map(([k]) => <td key={k} style={{ fontSize: 13 }}>{item[k.charAt(0).toLowerCase() + k.slice(1)] || item[k] || 'â€”'}</td>)}
                   <td><div style={{ display: 'flex', gap: 4 }}>
                     <button className="btn-icon" onClick={() => {
                       setSelected(item)
@@ -835,3 +835,4 @@ export function DataConstantsPage() {
     </>
   )
 }
+
