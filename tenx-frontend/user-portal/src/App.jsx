@@ -1,6 +1,7 @@
 ﻿import { ReviewsPage, ConsultantAvailabilityPage, UserNotificationsPage, ForgotPasswordPage } from './pages/PartBPages'
 import { ConsultantDirectPage } from './pages/ConsultantDirectPage'
 import BillingPage from './pages/BillingPage'
+import RegisterPage from './pages/RegisterPage'
 import React, { useState, useEffect, useCallback, useRef } from 'react'
 import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate, useLocation, useParams, Outlet } from 'react-router-dom'
 import { Toaster, toast } from 'react-hot-toast'
@@ -794,6 +795,7 @@ export default function App() {
         <Route path="/c/:slug"      element={<ConsultantDirectPage />} />
         <Route path="/forgot-password" element={<ForgotPasswordPage />} />
         <Route path="/login"        element={<LoginPage />} />
+        <Route path="/register"     element={<RegisterPage />} />
         <Route path="*"             element={<Navigate to="/" />} />
       </Routes>
     </>
