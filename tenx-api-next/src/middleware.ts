@@ -6,6 +6,7 @@ export function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
 
   const publicRoutes = [
+    "/api/auth/register",
     "/api/auth/login/step1",
     "/api/auth/login/step2",
     "/api/auth/refresh",

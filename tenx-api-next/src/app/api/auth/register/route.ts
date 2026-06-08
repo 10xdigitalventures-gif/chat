@@ -16,11 +16,7 @@ const registerSchema = z.object({
 
 async function ensureRole(roleName: string) {
   let role = await prisma.appRole.findFirst({ where: { roleName } });
-
-  if (!role) {
-    role = await prisma.appRole.create({ data: { roleName } });
-  }
-
+  if (!role) role = await prisma.appRole.create({ data: { roleName } });
   return role;
 }
 
