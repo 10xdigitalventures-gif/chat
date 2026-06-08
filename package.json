@@ -10,10 +10,13 @@
     "dev:consultant": "cd tenx-frontend/consultant-portal && npm run dev",
     "dev:user": "cd tenx-frontend/user-portal && npm run dev",
     "start": "node hostinger-server.js",
-    "build:api": "cd tenx-api-next && npm run build",
+    "build:api": "npm --prefix tenx-api-next run build",
     "build:frontend:hostinger": "cd tenx-frontend/admin-portal && VITE_BASE_PATH=/admin/ VITE_API_URL=/api npm run build && cd ../consultant-portal && VITE_BASE_PATH=/consultant/ VITE_API_URL=/api npm run build && cd ../user-portal && VITE_BASE_PATH=/user/ VITE_API_URL=/api npm run build",
-    "build:hostinger": "npm run build:frontend:hostinger && npm run build:api",
-    "start:api": "cd tenx-api-next && npm start"
+    "build:hostinger": "node scripts/build-hostinger.js",
+    "start:api": "cd tenx-api-next && npm start",
+    "install:subapps": "npm --prefix tenx-api-next install && npm --prefix tenx-frontend/admin-portal install && npm --prefix tenx-frontend/consultant-portal install && npm --prefix tenx-frontend/user-portal install",
+    "postinstall": "npm run install:subapps",
+    "prestart": "npm run build:hostinger"
   },
   "devDependencies": {
     "concurrently": "^9.0.1"
