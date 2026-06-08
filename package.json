@@ -15,7 +15,8 @@
     "build:hostinger": "node scripts/build-hostinger.js",
     "start:api": "cd tenx-api-next && npm start",
     "install:subapps": "npm --prefix tenx-api-next install && npm --prefix tenx-frontend/admin-portal install && npm --prefix tenx-frontend/consultant-portal install && npm --prefix tenx-frontend/user-portal install",
-    "postinstall": "npm run install:subapps"
+    "postinstall": "npm run install:subapps",
+    "build": "npm run build:hostinger"
   },
   "devDependencies": {
     "concurrently": "^9.0.1"
