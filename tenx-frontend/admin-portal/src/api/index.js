@@ -2,6 +2,18 @@ import axios from 'axios'
 
 const BASE = (import.meta.env.VITE_API_URL || '/api').replace(/\/$/, '')
 
+const isAuthEndpoint = (url = '') => {
+  const u = String(url)
+  return (
+    u.includes('/auth/login') ||
+    u.includes('/auth/register') ||
+    u.includes('/auth/forgot-password') ||
+    u.includes('/auth/verify-reset-token') ||
+    u.includes('/auth/reset-password') ||
+    u.includes('/auth/external-login')
+  )
+}
+
 export const api = axios.create({ baseURL: BASE })
 
 api.interceptors.request.use(cfg => {
@@ -14,7 +26,7 @@ let refreshing = false
 api.interceptors.response.use(
   r => r,
   async err => {
-    if (err.response?.status === 401 && !refreshing) {
+    if (err.response?.status === 401 && !refreshing && !isAuthEndpoint(err.config?.url)) {
       refreshing = true
       try {
         const rt = localStorage.getItem('refreshToken')
