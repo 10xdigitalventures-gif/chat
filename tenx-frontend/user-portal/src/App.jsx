@@ -290,53 +290,19 @@ setTotal(totalCount)
 // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function LoginPage() {
   const navigate = useNavigate()
-  const { step1, step2, loading, step1Data } = useAuthStore()
-  const [phase, setPhase] = useState(1)
+  const { login, loading } = useAuthStore()
   const [email, setEmail] = useState('')
-  const [pass, setPass]   = useState('')
-  const [locId, setLoc]   = useState('')
-  const [fyId, setFY]     = useState('')
-  const [conn, setConn]   = useState('Production')
-  const [socialLoading, setSocialLoading] = useState(null)
+  const [pass, setPass] = useState('')
 
-  const doStep1 = async e => {
+  const submit = async e => {
     e.preventDefault()
     try {
-      const d = await step1(email)
-      const cur = d.fiscalYears?.find(f => f.isCurrent); if (cur) setFY(cur.id)
-      if (d.locations?.length === 1) setLoc(d.locations[0].id)
-      setPhase(2)
-    } catch (err) { toast.error(err.message) }
-  }
-
-  const doStep2 = async e => {
-    e.preventDefault()
-    if (!locId || !fyId) { toast.error('Select location & fiscal year'); return }
-    try {
-      await step2({ email, password: pass, locationId: locId, fiscalYearId: fyId, connection: conn, rememberMe: false })
-      toast.success('Welcome back!'); navigate('/')
-    } catch (err) { toast.error(err.message) }
-  }
-
-  // â”€â”€ Social Login (Firebase) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-  const handleSocialLogin = async (providerFn, providerName) => {
-    setSocialLoading(providerName)
-    try {
-      const { signInWithGoogle, signInWithFacebook } = await import('./firebaseAuth.js')
-      const fn = providerName === 'Google' ? signInWithGoogle : signInWithFacebook
-      const claims = await fn()
-      const { data } = await (await import('./api.js')).authApi.externalLogin(claims)
-      const { accessToken, refreshToken, user } = data.data
-      localStorage.setItem('accessToken', accessToken)
-      localStorage.setItem('refreshToken', refreshToken)
-      localStorage.setItem('user', JSON.stringify(user))
-      useAuthStore.setState({ accessToken, refreshToken, user })
-      toast.success(`Welcome, ${user.userName}!`)
+      await login(email, pass)
+      toast.success('Welcome back!')
       navigate('/')
     } catch (err) {
-      const msg = err?.response?.data?.message || err?.message || 'Social login failed'
-      if (!msg.includes('popup-closed')) toast.error(msg)
-    } finally { setSocialLoading(null) }
+      toast.error(err.message)
+    }
   }
 
   return (
@@ -344,86 +310,45 @@ function LoginPage() {
       <div className="login-page" style={{ marginTop: -60, paddingTop: 60 }}>
         <div className="login-box">
           <div className="login-logo">Sign <span style={{ color: 'var(--accent)' }}>In</span></div>
-          <p className="login-sub">{phase === 1 ? 'Enter your email to continue' : `Welcome, ${step1Data?.userName}`}</p>
+          <p className="login-sub">Enter your email and password</p>
 
-          {phase === 1 && (
-            <form onSubmit={doStep1}>
-              <div className="form-group">
-                <label>Email</label>
-                <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="you@company.com" required autoFocus />
+          <form onSubmit={submit}>
+            <div className="form-group">
+              <label>Email</label>
+              <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="you@company.com" required autoFocus />
+            </div>
+
+            <div className="form-group">
+              <label>Password</label>
+              <input type="password" value={pass} onChange={e => setPass(e.target.value)} required />
+              <div style={{ textAlign: 'right', marginTop: 4 }}>
+                <button type="button" onClick={() => navigate('/forgot-password')} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 12, color: 'var(--accent)' }}>
+                  Forgot password?
+                </button>
               </div>
-              <button className="btn btn-primary" type="submit" disabled={loading} style={{ width: '100%', justifyContent: 'center', padding: 12 }}>
-                {loading ? <Loader size={14} className="spin" /> : <>Continue <ChevronRight size={14} /></>}
+            </div>
+
+            <button className="btn btn-primary" type="submit" disabled={loading} style={{ width: '100%', justifyContent: 'center', padding: 12 }}>
+              {loading ? <Loader size={14} className="spin" /> : 'Sign In'}
+            </button>
+
+            <div style={{ marginTop: 18, textAlign: 'center', fontSize: 13, color: 'var(--muted)' }}>
+              Don't have an account?{' '}
+              <button
+                type="button"
+                onClick={() => navigate('/register')}
+                style={{ background: 'none', border: 'none', color: 'var(--accent)', fontWeight: 700, cursor: 'pointer' }}
+              >
+                Create account
               </button>
-
-              {/* â”€â”€ Social Login Divider â”€â”€ */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: 12, margin: '20px 0 16px' }}>
-                <div style={{ flex: 1, height: 1, background: 'var(--border)' }} />
-                <span style={{ fontSize: 12, color: 'var(--muted)', whiteSpace: 'nowrap' }}>or continue with</span>
-                <div style={{ flex: 1, height: 1, background: 'var(--border)' }} />
-              </div>
-
-              <div style={{ display: 'flex', gap: 10 }}>
-                <button type="button" onClick={() => handleSocialLogin(null, 'Google')} disabled={!!socialLoading}
-                  style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '10px 0', borderRadius: 10, border: '1px solid var(--border)', background: 'var(--bg2)', cursor: 'pointer', fontSize: 13, fontWeight: 600, color: 'var(--text)' }}>
-                  {socialLoading === 'Google' ? <Loader size={14} className="spin" /> : <><svg width="16" height="16" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59A14.5 14.5 0 019.5 24c0-1.59.28-3.14.76-4.59l-7.98-6.19A23.9 23.9 0 000 24c0 3.77.9 7.35 2.56 10.54l7.97-5.95z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 5.95C6.51 42.62 14.62 48 24 48z"/></svg> Google</>}
-                </button>
-                <button type="button" onClick={() => handleSocialLogin(null, 'Facebook')} disabled={!!socialLoading}
-                  style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '10px 0', borderRadius: 10, border: '1px solid var(--border)', background: 'var(--bg2)', cursor: 'pointer', fontSize: 13, fontWeight: 600, color: 'var(--text)' }}>
-                  {socialLoading === 'Facebook' ? <Loader size={14} className="spin" /> : <><svg width="16" height="16" viewBox="0 0 48 48"><path fill="#1877F2" d="M48 24C48 10.745 37.255 0 24 0S0 10.745 0 24c0 11.979 8.776 21.908 20.25 23.708v-16.77h-6.094V24h6.094v-5.288c0-6.014 3.583-9.337 9.065-9.337 2.625 0 5.372.469 5.372.469v5.906h-3.026c-2.981 0-3.911 1.85-3.911 3.75V24h6.656l-1.064 6.938H27.75v16.77C39.224 45.908 48 35.978 48 24z"/></svg> Facebook</>}
-                </button>
-              </div>
-            </form>
-          )}
-
-          {phase === 2 && (
-            <form onSubmit={doStep2}>
-              <div className="form-group">
-                <label>Password</label>
-                <input type="password" value={pass} onChange={e => setPass(e.target.value)} required autoFocus />
-                <div style={{ textAlign: 'right', marginTop: 4 }}>
-                  <button onClick={() => navigate('/forgot-password')} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 12, color: 'var(--accent)' }}>
-                    Forgot password?
-                  </button>
-                </div>
-              </div>
-              <div className="form-group">
-                <label>Location</label>
-                <select value={locId} onChange={e => setLoc(e.target.value)} required>
-                  <option value="">Selectâ€¦</option>
-                  {step1Data?.locations?.map(l => <option key={l.id} value={l.id}>{l.locationName}</option>)}
-                </select>
-              </div>
-              <div className="grid-2">
-                <div className="form-group">
-                  <label>Fiscal Year</label>
-                  <select value={fyId} onChange={e => setFY(e.target.value)} required>
-                    <option value="">Selectâ€¦</option>
-                    {step1Data?.fiscalYears?.map(f => <option key={f.id} value={f.id}>{f.name}{f.isCurrent ? ' â˜…' : ''}</option>)}
-                  </select>
-                </div>
-                <div className="form-group">
-                  <label>Connection</label>
-                  <select value={conn} onChange={e => setConn(e.target.value)}>
-                    {step1Data?.connections?.map(c => <option key={c}>{c}</option>)}
-                  </select>
-                </div>
-              </div>
-              <div style={{ display: 'flex', gap: 8 }}>
-                <button type="button" className="btn btn-ghost" onClick={() => setPhase(1)} style={{ flex: 1, justifyContent: 'center' }}>Back</button>
-                <button type="submit" className="btn btn-primary" disabled={loading} style={{ flex: 2, justifyContent: 'center', padding: 12 }}>
-                  {loading ? <Loader size={14} className="spin" /> : 'Sign In'}
-                </button>
-              </div>
-            </form>
-          )}
+            </div>
+          </form>
         </div>
       </div>
     </>
   )
 }
 
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // PROFILE PAGE
 // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function ProfilePage() {
