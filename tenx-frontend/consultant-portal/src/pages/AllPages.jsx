@@ -22,19 +22,20 @@ export function LoginPage() {
 
   const submit = async e => {
     e.preventDefault()
+
     try {
       const user = await login(email, password)
 
       if (!String(user.role || '').toLowerCase().includes('consultant')) {
         toast.error('This portal is for consultants only')
-        useAuthStore.getState().logout()
+        await useAuthStore.getState().logout()
         return
       }
 
       toast.success('Welcome back!')
       navigate('/')
     } catch (err) {
-      toast.error(err.message)
+      toast.error(err.message || 'Login failed')
     }
   }
 

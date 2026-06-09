@@ -19,14 +19,14 @@ export default function LoginPage() {
 
       if (!String(user.role || '').toLowerCase().includes('admin')) {
         toast.error('This portal is for admins only')
-        useAuthStore.getState().logout()
+        await useAuthStore.getState().logout()
         return
       }
 
       toast.success('Welcome back!')
       navigate('/')
     } catch (err) {
-      toast.error(err.message)
+      toast.error(err.message || 'Login failed')
     }
   }
 
