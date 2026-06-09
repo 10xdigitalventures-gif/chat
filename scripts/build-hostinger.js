@@ -51,6 +51,14 @@ buildPortal('admin-portal', '/admin/')
 buildPortal('consultant-portal', '/consultant/')
 buildPortal('user-portal', '/')
 
+run('npm', ['--prefix', 'tenx-api-next', 'exec', 'prisma', 'migrate', 'deploy'])
+
+run('node', ['prisma/seed-all.cjs'], {
+  cwd: 'tenx-api-next',
+  env: defaultBuildEnv,
+})
+
 run('npm', ['--prefix', 'tenx-api-next', 'run', 'build'], {
   env: defaultBuildEnv,
 })
+
