@@ -12,7 +12,7 @@ const defaultBuildEnv = {
     'build-time-secret-minimum-32-characters',
   DATABASE_URL:
     process.env.DATABASE_URL ||
-    'file:./prod.db',
+    'postgresql://postgres:password@localhost:5432/postgres?sslmode=require',
   NEXT_PUBLIC_URL:
     process.env.NEXT_PUBLIC_URL ||
     'https://new.10xdigitalventures.com',
@@ -29,6 +29,7 @@ function run(command, args, options = {}) {
   const result = spawnSync(command, args, {
     stdio: 'inherit',
     shell: process.platform === 'win32',
+    env: defaultBuildEnv,
     ...options,
   })
 
@@ -47,18 +48,24 @@ function buildPortal(name, basePath) {
   })
 }
 
+// Frontend builds
 buildPortal('admin-portal', '/admin/')
 buildPortal('consultant-portal', '/consultant/')
 buildPortal('user-portal', '/')
 
-run('npm', ['--prefix', 'tenx-api-next', 'exec', 'prisma', 'migrate', 'deploy'])
+// Prisma must run inside tenx-api-next so it can find prisma/schema.prisma
+run('npx', ['prisma', 'generate'], {
+  cwd: 'tenx-api-next',
+})
 
+run('npx', ['prisma', 'migrate', 'deploy'], {
+  cwd: 'tenx-api-next',
+})
+
+// Seed is idempotent/upsert-based.
 run('node', ['prisma/seed-all.cjs'], {
   cwd: 'tenx-api-next',
-  env: defaultBuildEnv,
 })
 
-run('npm', ['--prefix', 'tenx-api-next', 'run', 'build'], {
-  env: defaultBuildEnv,
-})
-
+// Next.js backend build
+run('npm', ['--prefix', 'tenx-api-next', 'run', 'build'])
