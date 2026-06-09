@@ -58,7 +58,8 @@ export default function RegisterPage() {
       toast.success('Account created successfully!')
       navigate('/')
     } catch (err) {
-      toast.error(err.response?.data?.message || 'Registration failed')
+      console.error('Registration error:', err?.response?.data || err)
+      toast.error(err.response?.data?.message || err.message || 'Registration failed')
     } finally {
       setLoading(false)
     }

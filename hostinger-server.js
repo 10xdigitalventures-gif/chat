@@ -106,6 +106,12 @@ async function main() {
     const parsedUrl = new URL(req.url || '/', `http://${req.headers.host || 'localhost'}`)
     const pathname = decodeURIComponent(parsedUrl.pathname)
 
+    if (pathname === '/favicon.ico') {
+      res.statusCode = 204
+      res.end()
+      return
+    }
+
     if (pathname === '/') {
       res.statusCode = 302
       res.setHeader('Location', '/user/')
