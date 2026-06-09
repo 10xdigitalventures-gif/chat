@@ -1,7 +1,7 @@
 ﻿import axios from 'axios'
 
 // Use Vite proxy
-const BASE = import.meta.env.VITE_API_URL || '/api'
+const BASE = (import.meta.env.VITE_API_URL || '/api').replace(/\/$/, '')
 
 export const api = axios.create({
   baseURL: BASE
@@ -23,7 +23,7 @@ api.interceptors.response.use(
 
       if (rt) {
         try {
-          const { data } = await axios.post('/api/auth/refresh', {
+          const { data } = await axios.post(`${BASE}/auth/refresh`, {
             refreshToken: rt
           })
 
@@ -35,7 +35,7 @@ api.interceptors.response.use(
           return api(err.config)
         } catch {
           localStorage.clear()
-          window.location.href = '/login'
+          window.location.href = '/consultant/login'
         }
       }
     }

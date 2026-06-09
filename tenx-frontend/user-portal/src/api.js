@@ -1,7 +1,7 @@
 ﻿import axios from 'axios'
 import { create } from 'zustand'
 
-const BASE = import.meta.env.VITE_API_URL || '/api'
+const BASE = (import.meta.env.VITE_API_URL || '/api').replace(/\/$/, '')
 export const api = axios.create({ baseURL: BASE })
 
 api.interceptors.request.use(cfg => {
@@ -19,7 +19,7 @@ api.interceptors.response.use(r => r, async err => {
         localStorage.setItem('refreshToken', data.data.refreshToken)
         err.config.headers.Authorization = `Bearer ${data.data.accessToken}`
         return api(err.config)
-      } catch { localStorage.clear(); window.location.href = '/login' }
+      } catch { localStorage.clear(); window.location.href = '/user/login' }
     }
   }
   return Promise.reject(err)
