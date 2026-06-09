@@ -39,6 +39,7 @@ api.interceptors.response.use(r => r, async err => {
 
 // â”€â”€ API CALLS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 export const authApi = {
+  register: body => api.post('/auth/register', body),
   step1:  email => api.post('/auth/login/step1', { email }),
   step2:  body  => api.post('/auth/login/step2', body),
   logout: rt    => api.post('/auth/logout', { refreshToken: rt }),
@@ -173,6 +174,7 @@ export const forgotApi = {
   verify:  (email, token)                   => api.post('/auth/verify-reset-token', { email, token }),
   reset:   (email, resetSessionToken, pwd)  => api.post('/auth/reset-password',     { email, resetSessionToken, newPassword: pwd }),
 }
+
 
 
 
