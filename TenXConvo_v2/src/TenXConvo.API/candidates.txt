@@ -1,1 +1,0 @@
-C:\Users\User\Downloads\TenXConvo_v7_with_EasyPaisa\TenXConvo_output\TenXConvo_v2\src\TenXConvo.API\obj\Release\net10.0\TenXConvo.API.MvcApplicationPartsAssemblyInfo.cs
