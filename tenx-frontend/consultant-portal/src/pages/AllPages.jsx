@@ -16,99 +16,54 @@ import {
 // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 export function LoginPage() {
   const navigate = useNavigate()
-  const { step1, step2, loading } = useAuthStore()
-  const [phase, setPhase]   = useState(1)
-  const [step1Data, setD]   = useState(null)
-  const [email, setEmail]   = useState('')
+  const { login, loading } = useAuthStore()
+  const [email, setEmail] = useState('')
   const [password, setPass] = useState('')
-  const [locationId, setLoc]   = useState('')
-  const [fiscalYearId, setFY]  = useState('')
-  const [connection, setConn]  = useState('Production')
 
-  const doStep1 = async e => {
+  const submit = async e => {
     e.preventDefault()
     try {
-      const d = await step1(email); setD(d)
-      const cur = d.fiscalYears?.find(f => f.isCurrent)
-      if (cur) setFY(cur.id)
-      if (d.locations?.length === 1) setLoc(d.locations[0].id)
-      setPhase(2)
-    } catch (err) { toast.error(err.message) }
-  }
+      const user = await login(email, password)
 
-  const doStep2 = async e => {
-    e.preventDefault()
-    if (!locationId || !fiscalYearId) { toast.error('Select location & fiscal year'); return }
-    try {
-      const user = await step2({ email, password, locationId, fiscalYearId, connection, rememberMe: false })
-      if (!((user.role || user.roleName || '').toLowerCase().includes('consultant'))) {
+      if (!String(user.role || '').toLowerCase().includes('consultant')) {
         toast.error('This portal is for consultants only')
-        useAuthStore.getState().logout(); return
+        useAuthStore.getState().logout()
+        return
       }
-      toast.success('Welcome back!'); navigate('/')
-    } catch (err) { toast.error(err.message) }
+
+      toast.success('Welcome back!')
+      navigate('/')
+    } catch (err) {
+      toast.error(err.message)
+    }
   }
 
   return (
     <div className="login-page">
       <div className="login-box">
         <div className="login-logo">10X <span style={{ color: 'var(--accent)' }}>Consultant</span></div>
-        <p className="login-sub">{phase === 1 ? 'Sign in to your consultant portal' : `Hi, ${step1Data?.userName}`}</p>
+        <p className="login-sub">Sign in to your consultant portal</p>
 
-        {phase === 1 && (
-          <form onSubmit={doStep1}>
-            <div className="form-group">
-              <label>Email</label>
-              <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="you@company.com" required autoFocus />
-            </div>
-            <button className="btn btn-primary" type="submit" disabled={loading} style={{ width: '100%', justifyContent: 'center', padding: 11 }}>
-              {loading ? <Loader size={14} className="spin" /> : <>Continue <ChevronRight size={14} /></>}
-            </button>
-          </form>
-        )}
+        <form onSubmit={submit}>
+          <div className="form-group">
+            <label>Email</label>
+            <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="consultant@tenx.com" required autoFocus />
+          </div>
 
-        {phase === 2 && (
-          <form onSubmit={doStep2}>
-            <div className="form-group">
-              <label>Password</label>
-              <input type="password" value={password} onChange={e => setPass(e.target.value)} placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢" required autoFocus />
-            </div>
-            <div className="form-group">
-              <label>Location</label>
-              <select value={locationId} onChange={e => setLoc(e.target.value)} required>
-                <option value="">Selectâ€¦</option>
-                {step1Data?.locations?.map(l => <option key={l.id} value={l.id}>{l.locationName}</option>)}
-              </select>
-            </div>
-            <div className="grid-2">
-              <div className="form-group">
-                <label>Fiscal Year</label>
-                <select value={fiscalYearId} onChange={e => setFY(e.target.value)} required>
-                  <option value="">Selectâ€¦</option>
-                  {step1Data?.fiscalYears?.map(f => <option key={f.id} value={f.id}>{f.name}{f.isCurrent ? ' â˜…' : ''}</option>)}
-                </select>
-              </div>
-              <div className="form-group">
-                <label>Connection</label>
-                <select value={connection} onChange={e => setConn(e.target.value)}>
-                  {step1Data?.connections?.map(c => <option key={c}>{c}</option>)}
-                </select>
-              </div>
-            </div>
-            <div style={{ display: 'flex', gap: 8 }}>
-              <button type="button" className="btn btn-ghost" onClick={() => setPhase(1)} style={{ flex: 1, justifyContent: 'center' }}>Back</button>
-              <button type="submit" className="btn btn-primary" disabled={loading} style={{ flex: 2, justifyContent: 'center', padding: 11 }}>
-                {loading ? <Loader size={14} className="spin" /> : 'Sign In'}
-              </button>
-            </div>
-          </form>
-        )}
+          <div className="form-group">
+            <label>Password</label>
+            <input type="password" value={password} onChange={e => setPass(e.target.value)} placeholder="????????" required />
+          </div>
+
+          <button className="btn btn-primary" type="submit" disabled={loading} style={{ width: '100%', justifyContent: 'center', padding: 11 }}>
+            {loading ? <Loader size={14} className="spin" /> : 'Sign In'}
+          </button>
+        </form>
       </div>
     </div>
   )
 }
 
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 // DASHBOARD
 // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 export function DashboardPage() {

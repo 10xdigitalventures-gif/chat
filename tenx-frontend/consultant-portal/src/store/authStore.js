@@ -21,6 +21,23 @@ export const useAuthStore = create((set, get) => ({
     }
   },
 
+  login: async (email, password) => {
+    set({ loading: true, error: null })
+    try {
+      const { data } = await authApi.step2({ email, password, rememberMe: true })
+      const { accessToken, refreshToken, user } = data.data
+      localStorage.setItem('accessToken', accessToken)
+      localStorage.setItem('refreshToken', refreshToken)
+      localStorage.setItem('user', JSON.stringify(user))
+      set({ accessToken, refreshToken, user, loading: false })
+      return user
+    } catch (e) {
+      const msg = e.response?.data?.message || 'Login failed'
+      set({ error: msg, loading: false })
+      throw new Error(msg)
+    }
+  },
+
   step2: async (body) => {
     set({ loading: true, error: null })
     try {
