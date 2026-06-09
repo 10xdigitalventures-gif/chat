@@ -31,7 +31,7 @@ api.interceptors.response.use(r => r, async err => {
         localStorage.setItem('refreshToken', data.data.refreshToken)
         err.config.headers.Authorization = `Bearer ${data.data.accessToken}`
         return api(err.config)
-      } catch { localStorage.clear(); window.location.href = '/user/login' }
+      } catch { localStorage.clear(); window.location.href = '/login' }
     }
   }
   return Promise.reject(err)

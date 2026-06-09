@@ -49,7 +49,7 @@ function buildPortal(name, basePath) {
 
 buildPortal('admin-portal', '/admin/')
 buildPortal('consultant-portal', '/consultant/')
-buildPortal('user-portal', '/user/')
+buildPortal('user-portal', '/')
 
 run('npm', ['--prefix', 'tenx-api-next', 'run', 'build'], {
   env: defaultBuildEnv,
