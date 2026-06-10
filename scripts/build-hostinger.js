@@ -11,9 +11,6 @@ const defaultBuildEnv = {
     process.env.NEXTAUTH_SECRET ||
     process.env.JWT_SECRET ||
     'build-time-secret-minimum-32-characters',
-  DATABASE_URL:
-    process.env.DATABASE_URL ||
-    'postgresql://postgres:password@localhost:5432/postgres?sslmode=require',
   NEXT_PUBLIC_URL:
     process.env.NEXT_PUBLIC_URL ||
     'https://new.10xdigitalventures.com',
@@ -76,19 +73,9 @@ buildPortal('admin-portal', '/admin/')
 buildPortal('consultant-portal', '/consultant/')
 buildPortal('user-portal', '/')
 
-// Prisma commands must run inside tenx-api-next.
+// Generate Prisma client only. Do NOT migrate/seed during build.
+// Wasmer build env may not have DATABASE_URL available.
 run('npx', ['prisma', 'generate'], {
-  cwd: 'tenx-api-next',
-})
-
-// On first deploy this creates DB tables.
-// On existing DB it applies pending migrations.
-run('npx', ['prisma', 'migrate', 'deploy'], {
-  cwd: 'tenx-api-next',
-})
-
-// Seed demo data. If you do not want seed on every deploy, comment this block later.
-run('node', ['prisma/seed-all.cjs'], {
   cwd: 'tenx-api-next',
 })
 

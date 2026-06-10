@@ -9,7 +9,7 @@
     "dev:admin": "cd tenx-frontend/admin-portal && npm run dev",
     "dev:consultant": "cd tenx-frontend/consultant-portal && npm run dev",
     "dev:user": "cd tenx-frontend/user-portal && npm run dev",
-    "start": "node hostinger-server.js",
+    "start": "node scripts/start-production.js",
     "build:api": "npm --prefix tenx-api-next run build",
     "build:frontend:hostinger": "cd tenx-frontend/admin-portal && VITE_BASE_PATH=/admin/ VITE_API_URL=/api npm run build && cd ../consultant-portal && VITE_BASE_PATH=/consultant/ VITE_API_URL=/api npm run build && cd ../user-portal && VITE_BASE_PATH=/user/ VITE_API_URL=/api npm run build",
     "build:hostinger": "node scripts/build-hostinger.js",
