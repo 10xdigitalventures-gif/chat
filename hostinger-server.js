@@ -16,6 +16,7 @@
 const fs = require('fs')
 const http = require('http')
 const path = require('path')
+const Module = require('module')
 const { URL } = require('url')
 
 const rootDir = __dirname

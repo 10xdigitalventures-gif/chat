@@ -72,36 +72,44 @@ function buildPortal(name, basePath) {
     },
   })
 
-  // Frontend runtime only needs dist/. Remove node_modules to keep Wasmer image small.
+  // Frontend runtime only needs dist/.
   removeDir(path.join(dir, 'node_modules'))
 }
 
-// Install Next.js API dependencies after Wasmer copies the full repo.
+// Install API dependencies for build.
 installSubapp('tenx-api-next')
 
-// Build frontend portals.
+// Build portals.
 buildPortal('admin-portal', '/admin/')
 buildPortal('consultant-portal', '/consultant/')
 buildPortal('user-portal', '/')
 
 // Generate Prisma client only. Do NOT migrate/seed during build.
-// Wasmer build env may not have DATABASE_URL available.
 run('npx', ['prisma', 'generate'], {
   cwd: 'tenx-api-next',
 })
 
-// Build Next.js backend.
+// Build Next.js backend with standalone output.
 run('npm', ['--prefix', 'tenx-api-next', 'run', 'build'])
 
-// Remove Next build cache. Runtime does not need it.
+// Ensure standalone exists before removing full node_modules.
+ensureExists(path.join('tenx-api-next', '.next', 'standalone'))
+
+// Remove caches/dev-only folders.
 removeDir(path.join('tenx-api-next', '.next', 'cache'))
-
-// Keep only production dependencies for the Next.js API runtime.
-run('npm', ['--prefix', 'tenx-api-next', 'prune', '--omit=dev', '--ignore-scripts'])
-
-// Extra cleanup.
-removeDir(path.join('tenx-api-next', 'node_modules', '.cache'))
 removeDir(path.join('tenx-api-next', '.turbo'))
 removeDir(path.join('tenx-api-next', 'coverage'))
+removeDir(path.join('tenx-api-next', '__tests__'))
+removeDir(path.join('tenx-api-next', '.vercel'))
+removeDir(path.join('tenx-api-next', '.open-next'))
+removeDir(path.join('tenx-api-next', 'node_modules', '.cache'))
+
+// CRITICAL: Next standalone has traced runtime dependencies.
+// Remove full API node_modules to reduce Wasmer bundle size.
+removeDir(path.join('tenx-api-next', 'node_modules'))
+
+// Remove standalone cache if present.
+removeDir(path.join('tenx-api-next', '.next', 'standalone', '.next', 'cache'))
+removeDir(path.join('tenx-api-next', '.next', 'standalone', 'node_modules', '.cache'))
 
 console.log('\n✅ Build completed and runtime bundle cleaned.')
