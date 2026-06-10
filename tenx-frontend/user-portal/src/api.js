@@ -82,8 +82,7 @@ export const userApi = {
         api.post(`/user/consultants/${consultantId}/connect`),
 
     // NEW — instant chat start
-    startChat: consultantUserId =>
-        api.post(`/user/messages/start/${consultantUserId}`),
+    startChat: consultantUserId => api.post('/user/messages/start', { consultantUserId }),
 
     getProfile: () =>
         api.get('/user/profile'),
@@ -113,42 +112,98 @@ export const userApi = {
 
 // ── AUTH STORE ────────────────────────────────────────────────────────────────
 export const useAuthStore = create((set, get) => ({
-  user:         JSON.parse(localStorage.getItem('user') || 'null'),
-  accessToken:  localStorage.getItem('accessToken') || null,
+  user: JSON.parse(localStorage.getItem('user') || 'null'),
+  accessToken: localStorage.getItem('accessToken') || null,
   refreshToken: localStorage.getItem('refreshToken') || null,
   loading: false,
   step1Data: null,
 
+  login: async (email, password) => {
+    set({ loading: true })
+    try {
+      const { data } = await authApi.step2({
+        email,
+        password,
+        rememberMe: true,
+      })
+
+      const payload = data.data
+      const { accessToken, refreshToken, user } = payload
+
+      localStorage.setItem('accessToken', accessToken)
+      localStorage.setItem('refreshToken', refreshToken)
+      localStorage.setItem('user', JSON.stringify(user))
+
+      set({
+        accessToken,
+        refreshToken,
+        user,
+        loading: false,
+      })
+
+      return user
+    } catch (e) {
+      set({ loading: false })
+      throw new Error(e.response?.data?.message || 'Login failed')
+    }
+  },
+
+  // Compatibility only
   step1: async (email) => {
     set({ loading: true })
     try {
       const { data } = await authApi.step1(email)
-      set({ step1Data: data.data, loading: false }); return data.data
-    } catch (e) { set({ loading: false }); throw new Error(e.response?.data?.message || 'Email not found') }
+      set({ step1Data: data.data, loading: false })
+      return data.data
+    } catch (e) {
+      set({ loading: false })
+      throw new Error(e.response?.data?.message || 'Email not found')
+    }
   },
 
+  // Compatibility only
   step2: async (body) => {
     set({ loading: true })
     try {
       const { data } = await authApi.step2(body)
-      const { accessToken, refreshToken, user } = data.data
+      const payload = data.data
+      const { accessToken, refreshToken, user } = payload
+
       localStorage.setItem('accessToken', accessToken)
       localStorage.setItem('refreshToken', refreshToken)
       localStorage.setItem('user', JSON.stringify(user))
-      set({ accessToken, refreshToken, user, loading: false }); return user
-    } catch (e) { set({ loading: false }); throw new Error(e.response?.data?.message || 'Login failed') }
+
+      set({
+        accessToken,
+        refreshToken,
+        user,
+        loading: false,
+      })
+
+      return user
+    } catch (e) {
+      set({ loading: false })
+      throw new Error(e.response?.data?.message || 'Login failed')
+    }
   },
 
   logout: async () => {
-    try { await authApi.logout(get().refreshToken) } catch {}
+    try {
+      await authApi.logout(get().refreshToken)
+    } catch {}
+
     localStorage.clear()
-    set({ user: null, accessToken: null, refreshToken: null })
+
+    set({
+      user: null,
+      accessToken: null,
+      refreshToken: null,
+    })
   },
 
   isLoggedIn: () => !!get().accessToken,
 }))
 
-// ── USER NOTIFICATIONS ────────────────────────────────────────────────────────
 export const notifApi = {
   getAll:   (unreadOnly) => api.get('/user/notifications', { params: { unreadOnly, page:1, pageSize:30 } }),
   markRead: id           => api.put(`/user/notifications/${id}/read`),
