@@ -2,7 +2,7 @@
  * Wasmer/Hostinger single-process server for 10X Convo.
  *
  * Serves:
- *   /api/*        -> Next.js API backend in tenx-api-next
+ *   /api/*        -> proxied to Next.js standalone backend
  *   /admin/*      -> Admin portal SPA build
  *   /consultant/* -> Consultant portal SPA build
  *   /*            -> User portal SPA build
@@ -16,79 +16,10 @@ const { URL } = require('url')
 const rootDir = __dirname
 const apiDir = path.join(rootDir, 'tenx-api-next')
 
-function exists(p) {
-  try { return fs.existsSync(p) } catch { return false }
-}
-
-function findNextPackage(startDir, maxDepth = 6) {
-  const seen = new Set()
-
-  function walk(dir, depth) {
-    if (!dir || depth > maxDepth || seen.has(dir)) return null
-    seen.add(dir)
-
-    const direct = path.join(dir, 'node_modules', 'next')
-    if (exists(path.join(direct, 'package.json'))) return direct
-
-    let entries = []
-    try {
-      entries = fs.readdirSync(dir, { withFileTypes: true })
-    } catch {
-      return null
-    }
-
-    for (const entry of entries) {
-      if (!entry.isDirectory()) continue
-      if (entry.name === '.git' || entry.name === 'cache') continue
-
-      const found = walk(path.join(dir, entry.name), depth + 1)
-      if (found) return found
-    }
-
-    return null
-  }
-
-  return walk(startDir, 0)
-}
-
-const nextCandidates = [
-  path.join(apiDir, '.next', 'standalone', 'node_modules', 'next'),
-  path.join(apiDir, '.next', 'standalone', 'tenx-api-next', 'node_modules', 'next'),
-  path.join(apiDir, 'node_modules', 'next'),
-  path.join(rootDir, 'node_modules', 'next'),
-].filter(p => exists(path.join(p, 'package.json')))
-
-let nextPackageDir = nextCandidates[0]
-
-if (!nextPackageDir) {
-  nextPackageDir = findNextPackage(path.join(apiDir, '.next', 'standalone'))
-}
-
-if (!nextPackageDir) {
-  console.error('Could not find Next.js runtime package.')
-  console.error('Checked candidates:')
-  for (const p of [
-    path.join(apiDir, '.next', 'standalone', 'node_modules', 'next'),
-    path.join(apiDir, '.next', 'standalone', 'tenx-api-next', 'node_modules', 'next'),
-    path.join(apiDir, 'node_modules', 'next'),
-    path.join(rootDir, 'node_modules', 'next'),
-  ]) console.error(' - ' + p)
-
-  try {
-    console.error('standalone contents:', fs.readdirSync(path.join(apiDir, '.next', 'standalone')))
-  } catch (e) {
-    console.error('No standalone directory:', e.message)
-  }
-
-  process.exit(1)
-}
-
-console.log('Loading Next.js from:', nextPackageDir)
-const next = require(nextPackageDir)
-
-const port = Number(process.env.PORT || 5000)
+const publicPort = Number(process.env.PORT || 5000)
 const hostname = process.env.HOST || '0.0.0.0'
-const dev = process.env.NODE_ENV !== 'production' && process.env.HOSTINGER_DEV === '1'
+const nextInternalPort = Number(process.env.NEXT_INTERNAL_PORT || 5055)
+const nextInternalHost = '127.0.0.1'
 
 const adminDist = path.join(rootDir, 'tenx-frontend', 'admin-portal', 'dist')
 const consultantDist = path.join(rootDir, 'tenx-frontend', 'consultant-portal', 'dist')
@@ -116,6 +47,80 @@ const mimeTypes = {
   '.woff2': 'font/woff2',
   '.ttf': 'font/ttf',
   '.map': 'application/json; charset=utf-8'
+}
+
+function exists(p) {
+  try { return fs.existsSync(p) } catch { return false }
+}
+
+function findStandaloneServer() {
+  const candidates = [
+    path.join(apiDir, '.next', 'standalone', 'server.js'),
+    path.join(apiDir, '.next', 'standalone', 'tenx-api-next', 'server.js'),
+  ]
+
+  for (const candidate of candidates) {
+    if (exists(candidate)) return candidate
+  }
+
+  const standaloneRoot = path.join(apiDir, '.next', 'standalone')
+  if (exists(standaloneRoot)) {
+    const stack = [standaloneRoot]
+    while (stack.length) {
+      const dir = stack.pop()
+      let entries = []
+      try {
+        entries = fs.readdirSync(dir, { withFileTypes: true })
+      } catch {
+        continue
+      }
+
+      for (const entry of entries) {
+        const full = path.join(dir, entry.name)
+        if (entry.isDirectory()) {
+          if (entry.name !== 'node_modules' && entry.name !== '.git') stack.push(full)
+        } else if (entry.isFile() && entry.name === 'server.js') {
+          return full
+        }
+      }
+    }
+  }
+
+  return null
+}
+
+function startNextStandalone() {
+  const standaloneServer = findStandaloneServer()
+
+  if (!standaloneServer) {
+    console.error('Could not find Next standalone server.js')
+    try {
+      console.error('Standalone root:', path.join(apiDir, '.next', 'standalone'))
+      console.error('Contents:', fs.readdirSync(path.join(apiDir, '.next', 'standalone')))
+    } catch (e) {
+      console.error('Standalone directory missing:', e.message)
+    }
+    process.exit(1)
+  }
+
+  console.log('Starting Next standalone backend:', standaloneServer)
+  console.log(`Next internal URL: http://${nextInternalHost}:${nextInternalPort}`)
+
+  const oldPort = process.env.PORT
+  const oldHostname = process.env.HOSTNAME
+
+  process.env.PORT = String(nextInternalPort)
+  process.env.HOSTNAME = nextInternalHost
+  process.env.HOST = nextInternalHost
+
+  require(standaloneServer)
+
+  // Restore for public server logs/logic.
+  if (oldPort === undefined) delete process.env.PORT
+  else process.env.PORT = oldPort
+
+  if (oldHostname === undefined) delete process.env.HOSTNAME
+  else process.env.HOSTNAME = oldHostname
 }
 
 function safeJoin(baseDir, requestPath) {
@@ -177,10 +182,41 @@ function tryServePrefixedPortal(res, pathname) {
   return false
 }
 
-async function main() {
-  const app = next({ dev, dir: apiDir, hostname, port })
-  const handle = app.getRequestHandler()
-  await app.prepare()
+function proxyToNext(req, res) {
+  const headers = { ...req.headers }
+  headers.host = `${nextInternalHost}:${nextInternalPort}`
+  headers['x-forwarded-proto'] = headers['x-forwarded-proto'] || 'https'
+  headers['x-forwarded-host'] = req.headers.host || ''
+
+  const proxyReq = http.request({
+    hostname: nextInternalHost,
+    port: nextInternalPort,
+    method: req.method,
+    path: req.url,
+    headers,
+  }, proxyRes => {
+    res.writeHead(proxyRes.statusCode || 500, proxyRes.headers)
+    proxyRes.pipe(res)
+  })
+
+  proxyReq.on('error', err => {
+    console.error('Proxy to Next backend failed:', err)
+    if (!res.headersSent) {
+      res.statusCode = 502
+      res.setHeader('Content-Type', 'application/json')
+    }
+    res.end(JSON.stringify({
+      success: false,
+      message: 'Backend unavailable',
+      error: err.message,
+    }))
+  })
+
+  req.pipe(proxyReq)
+}
+
+function main() {
+  startNextStandalone()
 
   const server = http.createServer((req, res) => {
     const parsedUrl = new URL(req.url || '/', `http://${req.headers.host || 'localhost'}`)
@@ -200,10 +236,9 @@ async function main() {
       return
     }
 
+    // API and Next internals go to Next standalone backend.
     if (pathname.startsWith('/api') || pathname.startsWith('/_next')) {
-      req.headers['x-forwarded-proto'] = req.headers['x-forwarded-proto'] || 'https'
-      req.headers['x-forwarded-host'] = req.headers['x-forwarded-host'] || req.headers.host
-      handle(req, res, parsedUrl)
+      proxyToNext(req, res)
       return
     }
 
@@ -212,8 +247,8 @@ async function main() {
     serveSpaFromDist(res, userDist, pathname, 'user')
   })
 
-  server.listen(port, hostname, () => {
-    console.log(`10X Convo Hostinger app running on http://${hostname}:${port}`)
+  server.listen(publicPort, hostname, () => {
+    console.log(`10X Convo app running on http://${hostname}:${publicPort}`)
     console.log('User portal: /')
     console.log('Admin portal: /admin')
     console.log('Consultant portal: /consultant')
@@ -221,7 +256,9 @@ async function main() {
   })
 }
 
-main().catch(err => {
+try {
+  main()
+} catch (err) {
   console.error('Failed to start app:', err)
   process.exit(1)
-})
+}
