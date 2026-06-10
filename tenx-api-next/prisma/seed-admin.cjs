@@ -1,4 +1,4 @@
-﻿const { PrismaClient } = require("@prisma/client");
+const { PrismaClient } = require("@prisma/client");
 const bcrypt = require("bcryptjs");
 
 const prisma = new PrismaClient();
@@ -11,50 +11,6 @@ async function main() {
   if (!role) {
     role = await prisma.appRole.create({
       data: { roleName: "Admin" }
-    });
-  }
-
-  let locationType = await prisma.locationType.findFirst({
-    where: { locationTypeName: "Main" }
-  });
-
-  if (!locationType) {
-    locationType = await prisma.locationType.create({
-      data: {
-        locationTypeName: "Main",
-        shortName: "MAIN"
-      }
-    });
-  }
-
-  let location = await prisma.location.findFirst({
-    where: { locationName: "Head Office" }
-  });
-
-  if (!location) {
-    location = await prisma.location.create({
-      data: {
-        locationName: "Head Office",
-        locationAddress: "Main Office",
-        isActive: true,
-        locationTypeId: locationType.id
-      }
-    });
-  }
-
-  let fiscalYear = await prisma.fiscalYear.findFirst({
-    where: { name: "FY 2026" }
-  });
-
-  if (!fiscalYear) {
-    fiscalYear = await prisma.fiscalYear.create({
-      data: {
-        name: "FY 2026",
-        startDate: new Date("2026-01-01"),
-        endDate: new Date("2026-12-31"),
-        isActive: true,
-        isCurrent: true
-      }
     });
   }
 

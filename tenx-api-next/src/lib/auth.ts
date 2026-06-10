@@ -10,10 +10,8 @@ const REFRESH_TOKEN_EXPIRY = '30d';
 
 export interface TokenPayload {
   userId: string;
-  role: string;
-  locationId?: string;
-  connection?: string;
-  fiscalYearId?: string;
+  role: string;
+  connection?: string;
 }
 
 export const generateAccessToken = (payload: TokenPayload) => {

@@ -1,6 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -11,60 +8,57 @@ datasource db {
 }
 
 model AppUser {
-  id              String           @id @default(uuid())
-  userName        String
-  loginId         String           @unique
-  email           String           @unique
-  passwordHash    String
-  cellNo          String?
-  imageUrl        String?
-  roleId          String?
-  isActive        Boolean          @default(true)
-  createdAt       DateTime         @default(now())
-  updatedAt       DateTime?        @updatedAt
-
-  role            AppRole?         @relation(fields: [roleId], references: [id])
-  consultantProfile ConsultantProfile?
-  customerProfile   CustomerProfile?
-  refreshTokens     RefreshToken[]
-  pushTokens        WebPushToken[]
-  permissions       UserPermission[]
-  externalLogins    ExternalLogin[]
-  loginPreferences  UserLoginPreference[]
-  passwordResetTokens PasswordResetToken[]
-  creditBalances    CreditBalance?
-  paymentTransactions PaymentTransaction[]
-  invoices          Invoice[]
-  sentMessages      Message[]
+  id                  String                  @id @default(uuid())
+  userName            String
+  loginId             String                  @unique
+  email               String                  @unique
+  passwordHash        String
+  cellNo              String?
+  imageUrl            String?
+  roleId              String?
+  isActive            Boolean                 @default(true)
+  createdAt           DateTime                @default(now())
+  updatedAt           DateTime?               @updatedAt
   notificationTargets AppNotificationTarget[]
-  auditLogs         AuditLog[]
+  role                AppRole?                @relation(fields: [roleId], references: [id])
+  auditLogs           AuditLog[]
+  consultantProfile   ConsultantProfile?
+  creditBalances      CreditBalance?
+  customerProfile     CustomerProfile?
+  externalLogins      ExternalLogin[]
+  invoices            Invoice[]
+  sentMessages        Message[]
+  passwordResetTokens PasswordResetToken[]
+  paymentTransactions PaymentTransaction[]
+  refreshTokens       RefreshToken[]
+
+  permissions UserPermission[]
+  pushTokens  WebPushToken[]
 }
 
 model ExternalLogin {
   id          String   @id @default(uuid())
   userId      String
-  provider    String   // "Google" | "Microsoft"
-  providerKey String   // external user id
+  provider    String
+  providerKey String
   email       String?
   displayName String?
   avatarUrl   String?
   linkedAt    DateTime @default(now())
-
   user        AppUser  @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([provider, providerKey])
 }
 
 model AppRole {
-  id        String   @id @default(uuid())
-  roleName  String
-  createdOn DateTime @default(now())
-
-  users       AppUser[]
-  modules     RoleModule[]
-  menuEntries RoleMenuEntry[]
-  consultantDefaultSettings ClientSettings[] @relation("ConsultantDefaultRole")
+  id                        String           @id @default(uuid())
+  roleName                  String
+  createdOn                 DateTime         @default(now())
+  users                     AppUser[]
   clientDefaultSettings     ClientSettings[] @relation("ClientDefaultRole")
+  consultantDefaultSettings ClientSettings[] @relation("ConsultantDefaultRole")
+  menuEntries               RoleMenuEntry[]
+  modules                   RoleModule[]
 }
 
 model RefreshToken {
@@ -75,34 +69,7 @@ model RefreshToken {
   isRevoked Boolean  @default(false)
   ipAddress String?
   createdAt DateTime @default(now())
-
   user      AppUser  @relation(fields: [userId], references: [id], onDelete: Cascade)
-}
-
-model UserLoginPreference {
-  id           String   @id @default(uuid())
-  userId       String   @unique
-  locationId   String?
-  fiscalYearId String?
-  connection   String?  // "QA" | "Production"
-  rememberMe   Boolean  @default(false)
-  updatedAt    DateTime @updatedAt
-
-  user         AppUser  @relation(fields: [userId], references: [id], onDelete: Cascade)
-  location     Location? @relation(fields: [locationId], references: [id])
-  fiscalYear   FiscalYear? @relation(fields: [fiscalYearId], references: [id])
-}
-
-model FiscalYear {
-  id        String   @id @default(uuid())
-  name      String
-  startDate DateTime
-  endDate   DateTime
-  isActive  Boolean  @default(true)
-  isCurrent Boolean  @default(false)
-  createdAt DateTime @default(now())
-
-  loginPreferences UserLoginPreference[]
 }
 
 model PasswordResetToken {
@@ -113,60 +80,56 @@ model PasswordResetToken {
   isUsed    Boolean  @default(false)
   ipAddress String?
   createdAt DateTime @default(now())
-
   user      AppUser  @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model CustomerProfile {
-  id          String   @id @default(uuid())
-  userId      String   @unique
-  avatarUrl   String?
-  bio         String?
-  companyName String?
-  industry    String?
-  cityName    String?
-  isActive    Boolean  @default(true)
-  joinedDate  DateTime @default(now())
-  updatedAt   DateTime? @updatedAt
-
-  user        AppUser  @relation(fields: [userId], references: [id], onDelete: Cascade)
-  connections ClientConnection[]
-  conversations Conversation[]
+  id            String             @id @default(uuid())
+  userId        String             @unique
+  avatarUrl     String?
+  bio           String?
+  companyName   String?
+  industry      String?
+  cityName      String?
+  isActive      Boolean            @default(true)
+  joinedDate    DateTime           @default(now())
+  updatedAt     DateTime?          @updatedAt
+  connections   ClientConnection[]
   reviews       ConsultantReview[]
+  conversations Conversation[]
+  user          AppUser            @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model ConsultantProfile {
-  id             String   @id @default(uuid())
-  userId         String   @unique
-  slug           String   @unique
+  id             String                   @id @default(uuid())
+  userId         String                   @unique
+  slug           String                   @unique
   bio            String?
-  isOnline       Boolean  @default(false)
-  isPublic       Boolean  @default(true)
-  joinedDate     DateTime @default(now())
-  updatedAt      DateTime? @updatedAt
+  isOnline       Boolean                  @default(false)
+  isPublic       Boolean                  @default(true)
+  joinedDate     DateTime                 @default(now())
+  updatedAt      DateTime?                @updatedAt
   specialization String?
   experience     String?
   hourlyRate     Float?
   timezone       String?
   avatarUrl      String?
-
-  user           AppUser  @relation(fields: [userId], references: [id], onDelete: Cascade)
-  availabilities ConsultantAvailability[]
   connections    ClientConnection[]
-  conversations  Conversation[]
+  availabilities ConsultantAvailability[]
+  user           AppUser                  @relation(fields: [userId], references: [id], onDelete: Cascade)
   reviews        ConsultantReview[]
   serviceConfig  ConsultantServiceConfig?
+  conversations  Conversation[]
 }
 
 model ConsultantReview {
-  id           String   @id @default(uuid())
+  id           String            @id @default(uuid())
   consultantId String
   customerId   String
   rating       Int
   comment      String?
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime? @updatedAt
-
+  createdAt    DateTime          @default(now())
+  updatedAt    DateTime?         @updatedAt
   consultant   ConsultantProfile @relation(fields: [consultantId], references: [id])
   customer     CustomerProfile   @relation(fields: [customerId], references: [id], onDelete: Cascade)
 
@@ -174,24 +137,22 @@ model ConsultantReview {
 }
 
 model ConsultantAvailability {
-  id           String   @id @default(uuid())
+  id           String            @id @default(uuid())
   consultantId String
-  dayOfWeek    Int      // 0-6
-  startTime    String   // "HH:mm"
-  endTime      String   // "HH:mm"
-  isActive     Boolean  @default(true)
-
+  dayOfWeek    Int
+  startTime    String
+  endTime      String
+  isActive     Boolean           @default(true)
   consultant   ConsultantProfile @relation(fields: [consultantId], references: [id], onDelete: Cascade)
 }
 
 model ClientConnection {
-  id           String   @id @default(uuid())
+  id           String            @id @default(uuid())
   consultantId String
   customerId   String
-  status       String   @default("Pending") // Pending, Accepted, Rejected
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime? @updatedAt
-
+  status       String            @default("Pending")
+  createdAt    DateTime          @default(now())
+  updatedAt    DateTime?         @updatedAt
   consultant   ConsultantProfile @relation(fields: [consultantId], references: [id])
   customer     CustomerProfile   @relation(fields: [customerId], references: [id])
 
@@ -199,28 +160,26 @@ model ClientConnection {
 }
 
 model Conversation {
-  id           String   @id @default(uuid())
-  consultantId String
-  customerId   String
-  createdAt    DateTime @default(now())
-  lastMessageAt DateTime @default(now())
-
-  consultant   ConsultantProfile @relation(fields: [consultantId], references: [id])
-  customer     CustomerProfile   @relation(fields: [customerId], references: [id])
-  messages     Message[]
+  id            String            @id @default(uuid())
+  consultantId  String
+  customerId    String
+  createdAt     DateTime          @default(now())
+  lastMessageAt DateTime          @default(now())
+  consultant    ConsultantProfile @relation(fields: [consultantId], references: [id])
+  customer      CustomerProfile   @relation(fields: [customerId], references: [id])
+  messages      Message[]
 }
 
 model Message {
-  id             String   @id @default(uuid())
+  id             String       @id @default(uuid())
   conversationId String
   senderId       String
   body           String
-  messageType    String   @default("text")
+  messageType    String       @default("text")
   attachmentUrl  String?
   replyToId      String?
-  sentAt         DateTime @default(now())
-  isRead         Boolean  @default(false)
-
+  sentAt         DateTime     @default(now())
+  isRead         Boolean      @default(false)
   conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
   sender         AppUser      @relation(fields: [senderId], references: [id])
 
@@ -229,49 +188,46 @@ model Message {
 }
 
 model CreditBalance {
-  id        String   @id @default(uuid())
-  userId    String   @unique
-  amount    Float    @default(0)
-  updatedAt DateTime @updatedAt
-
-  user      AppUser  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id           String              @id @default(uuid())
+  userId       String              @unique
+  amount       Float               @default(0)
+  updatedAt    DateTime            @updatedAt
+  user         AppUser             @relation(fields: [userId], references: [id], onDelete: Cascade)
   transactions CreditTransaction[]
 }
 
 model CreditTransaction {
-  id              String   @id @default(uuid())
+  id              String              @id @default(uuid())
   creditBalanceId String
   amount          Float
-  type            String   // Credit, Debit
+  type            String
   description     String?
   paymentId       String?
-  createdAt       DateTime @default(now())
-
-  balance         CreditBalance @relation(fields: [creditBalanceId], references: [id], onDelete: Cascade)
+  createdAt       DateTime            @default(now())
+  balance         CreditBalance       @relation(fields: [creditBalanceId], references: [id], onDelete: Cascade)
   payment         PaymentTransaction? @relation(fields: [paymentId], references: [id])
 
   @@index([createdAt])
 }
 
 model PaymentTransaction {
-  id             String   @id @default(uuid())
-  userId         String
-  amount         Float
-  currency       String
-  status         String   @default("Pending") // Pending, Completed, Failed
-  provider       String   // PayFast, EasyPaisa, etc.
-  transactionRef String   @unique
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
-
-  user           AppUser  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id                 String              @id @default(uuid())
+  userId             String
+  amount             Float
+  currency           String
+  status             String              @default("Pending")
+  provider           String
+  transactionRef     String              @unique
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
   creditTransactions CreditTransaction[]
-  invoices       Invoice[]
+  invoices           Invoice[]
+  user               AppUser             @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model MessagePricing {
-  id           String   @id @default(uuid())
-  messageType  String   @unique
+  id           String  @id @default(uuid())
+  messageType  String  @unique
   unitType     String
   unitSize     Int
   pricePerUnit Float
@@ -280,49 +236,47 @@ model MessagePricing {
 }
 
 model ConsultantServiceConfig {
-  id               String   @id @default(uuid())
-  consultantUserId String   @unique
-  textRate         Float    @default(0)
-  audioRate        Float    @default(0)
-  videoRate        Float    @default(0)
-  imageRate        Float    @default(0)
-  fileRate         Float    @default(0)
-  stripeEnabled    Boolean  @default(false)
-  stripeAccountId  String?
-  jazzCashEnabled  Boolean  @default(false)
-  jazzCashAccount  String?
-  easyPaisaEnabled Boolean  @default(false)
-  easyPaisaAccount String?
-  payFastEnabled   Boolean  @default(false)
+  id                String            @id @default(uuid())
+  consultantUserId  String            @unique
+  textRate          Float             @default(0)
+  audioRate         Float             @default(0)
+  videoRate         Float             @default(0)
+  imageRate         Float             @default(0)
+  fileRate          Float             @default(0)
+  stripeEnabled     Boolean           @default(false)
+  stripeAccountId   String?
+  jazzCashEnabled   Boolean           @default(false)
+  jazzCashAccount   String?
+  easyPaisaEnabled  Boolean           @default(false)
+  easyPaisaAccount  String?
+  payFastEnabled    Boolean           @default(false)
   payFastMerchantId String?
   payFastSecuredKey String?
-  voiceEnabled     Boolean  @default(false)
-  videoEnabled     Boolean  @default(false)
-
-  consultant       ConsultantProfile @relation(fields: [consultantUserId], references: [userId], onDelete: Cascade)
+  voiceEnabled      Boolean           @default(false)
+  videoEnabled      Boolean           @default(false)
+  consultant        ConsultantProfile @relation(fields: [consultantUserId], references: [userId], onDelete: Cascade)
 }
 
 model Invoice {
-  id            String   @id @default(uuid())
+  id            String             @id @default(uuid())
   userId        String
   paymentId     String
-  invoiceNumber String   @unique
+  invoiceNumber String             @unique
   subTotal      Float
   tax           Float
   total         Float
-  status        String   @default("Paid")
-  createdAt     DateTime @default(now())
-
-  user          AppUser  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  status        String             @default("Paid")
+  createdAt     DateTime           @default(now())
   payment       PaymentTransaction @relation(fields: [paymentId], references: [id])
+  user          AppUser            @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model ErrorLog {
-  id        String   @id @default(uuid())
-  message   String
+  id         String   @id @default(uuid())
+  message    String
   stackTrace String?
-  source    String?
-  createdAt DateTime @default(now())
+  source     String?
+  createdAt  DateTime @default(now())
 }
 
 model AuditLog {
@@ -335,7 +289,6 @@ model AuditLog {
   details   String?
   ipAddress String
   createdOn DateTime @default(now())
-
   user      AppUser? @relation(fields: [userId], references: [id])
 
   @@index([createdOn])
@@ -354,26 +307,23 @@ model WebPushToken {
   p256dh    String
   auth      String
   createdAt DateTime @default(now())
-
   user      AppUser  @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model ControlType {
-  id                String   @id @default(uuid())
+  id                String            @id @default(uuid())
   controlTypeName   String
   controlTypePrefix String
-  createdOn         DateTime @default(now())
-
+  createdOn         DateTime          @default(now())
   categories        ControlCategory[]
 }
 
 model ControlCategory {
-  id                  String   @id @default(uuid())
+  id                  String      @id @default(uuid())
   controlTypeId       String
   controlCategoryName String
   controlPrefix       String
-  createdOn           DateTime @default(now())
-
+  createdOn           DateTime    @default(now())
   controlType         ControlType @relation(fields: [controlTypeId], references: [id], onDelete: Cascade)
 }
 
@@ -391,15 +341,6 @@ model ClientCategory {
   createdOn             DateTime @default(now())
 }
 
-model LocationType {
-  id               String   @id @default(uuid())
-  locationTypeName String
-  shortName        String
-  createdOn        DateTime @default(now())
-
-  locations        Location[]
-}
-
 model DocumentType {
   id               String   @id @default(uuid())
   documentTypeName String
@@ -408,27 +349,24 @@ model DocumentType {
 }
 
 model DocumentMovement {
-  id        String   @id @default(uuid())
-  // Define fields as needed
+  id String @id @default(uuid())
 }
 
 model CriteriaType {
-  id                 String   @id @default(uuid())
+  id                 String            @id @default(uuid())
   criteriaTypeName   String
   criteriaTypePrefix String
-  createdOn          DateTime @default(now())
-
+  createdOn          DateTime          @default(now())
   subTypes           CriteriaSubType[]
 }
 
 model CriteriaSubType {
-  id               String   @id @default(uuid())
-  criteriaTypeId   String
-  subCriteriaName  String
-  prefix           String
-  createdOn        DateTime @default(now())
-
-  criteriaType     CriteriaType @relation(fields: [criteriaTypeId], references: [id], onDelete: Cascade)
+  id              String       @id @default(uuid())
+  criteriaTypeId  String
+  subCriteriaName String
+  prefix          String
+  createdOn       DateTime     @default(now())
+  criteriaType    CriteriaType @relation(fields: [criteriaTypeId], references: [id], onDelete: Cascade)
 }
 
 model Currency {
@@ -440,12 +378,11 @@ model Currency {
 }
 
 model Country {
-  id          String   @id @default(uuid())
+  id          String     @id @default(uuid())
   countryName String
   code        String
   prefix      String
-  createdOn   DateTime @default(now())
-
+  createdOn   DateTime   @default(now())
   provinces   Province[]
 }
 
@@ -455,20 +392,18 @@ model Province {
   provinceName String
   prefix       String
   createdOn    DateTime @default(now())
-
-  country      Country  @relation(fields: [countryId], references: [id], onDelete: Cascade)
   cities       City[]
+  country      Country  @relation(fields: [countryId], references: [id], onDelete: Cascade)
 }
 
 model City {
-  id          String   @id @default(uuid())
-  provinceId  String
-  cityName    String
-  createdOn   DateTime @default(now())
-
-  province    Province @relation(fields: [provinceId], references: [id], onDelete: Cascade)
-  districts   District[]
-  areas       Area[]
+  id         String     @id @default(uuid())
+  provinceId String
+  cityName   String
+  createdOn  DateTime   @default(now())
+  areas      Area[]
+  province   Province   @relation(fields: [provinceId], references: [id], onDelete: Cascade)
+  districts  District[]
 }
 
 model District {
@@ -476,7 +411,6 @@ model District {
   cityId       String
   districtName String
   createdOn    DateTime @default(now())
-
   city         City     @relation(fields: [cityId], references: [id], onDelete: Cascade)
   tehsils      Tehsil[]
 }
@@ -486,7 +420,6 @@ model Tehsil {
   districtId String
   tehsilName String
   createdOn  DateTime @default(now())
-
   district   District @relation(fields: [districtId], references: [id], onDelete: Cascade)
 }
 
@@ -495,7 +428,6 @@ model Area {
   cityId    String
   areaName  String
   createdOn DateTime @default(now())
-
   city      City     @relation(fields: [cityId], references: [id], onDelete: Cascade)
 }
 
@@ -515,49 +447,25 @@ model Organization {
   updatedAt      DateTime @updatedAt
 }
 
-model Location {
-  id              String   @id @default(uuid())
-  locationName    String
-  locationTypeId  String
-  locationAddress String
-  isActive        Boolean  @default(true)
-  createdOn       DateTime @default(now())
-
-  locationType    LocationType @relation(fields: [locationTypeId], references: [id])
-  loginPreferences UserLoginPreference[]
-  roleModules     RoleModule[]
-  roleMenus       RoleMenuEntry[]
-  userPermissions UserPermission[]
-}
-
 model RoleModule {
-  id         String   @id @default(uuid())
+  id         String  @id @default(uuid())
   roleId     String
-  locationId String
   moduleName String
-
-  role       AppRole  @relation(fields: [roleId], references: [id], onDelete: Cascade)
-  location   Location @relation(fields: [locationId], references: [id], onDelete: Cascade)
+  role       AppRole @relation(fields: [roleId], references: [id], onDelete: Cascade)
 }
 
 model RoleMenuEntry {
-  id         String   @id @default(uuid())
-  roleId     String
-  locationId String?
-  menuName   String
-
-  role       AppRole  @relation(fields: [roleId], references: [id], onDelete: Cascade)
-  location   Location? @relation(fields: [locationId], references: [id], onDelete: SetNull)
+  id       String  @id @default(uuid())
+  roleId   String
+  menuName String
+  role     AppRole @relation(fields: [roleId], references: [id], onDelete: Cascade)
 }
 
 model UserPermission {
-  id         String   @id @default(uuid())
+  id         String  @id @default(uuid())
   userId     String
-  locationId String?
   permission String
-
-  user       AppUser  @relation(fields: [userId], references: [id], onDelete: Cascade)
-  location   Location? @relation(fields: [locationId], references: [id], onDelete: SetNull)
+  user       AppUser @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model WaTemplate {
@@ -590,28 +498,28 @@ model WebTemplate {
 }
 
 model WaNotification {
-  id        String   @id @default(uuid())
-  to        String
-  body      String
-  status    String
-  sentAt    DateTime?
+  id     String    @id @default(uuid())
+  to     String
+  body   String
+  status String
+  sentAt DateTime?
 }
 
 model SmsNotification {
-  id        String   @id @default(uuid())
-  to        String
-  body      String
-  status    String
-  sentAt    DateTime?
+  id     String    @id @default(uuid())
+  to     String
+  body   String
+  status String
+  sentAt DateTime?
 }
 
 model EmailNotification {
-  id        String   @id @default(uuid())
-  to        String
-  subject   String
-  body      String
-  status    String
-  sentAt    DateTime?
+  id      String    @id @default(uuid())
+  to      String
+  subject String
+  body    String
+  status  String
+  sentAt  DateTime?
 }
 
 model WebNotification {
@@ -624,21 +532,19 @@ model WebNotification {
 }
 
 model AppNotification {
-  id        String   @id @default(uuid())
+  id        String                  @id @default(uuid())
   title     String
   body      String
-  createdAt DateTime @default(now())
-
+  createdAt DateTime                @default(now())
   targets   AppNotificationTarget[]
 }
 
 model AppNotificationTarget {
-  id             String   @id @default(uuid())
+  id             String          @id @default(uuid())
   notificationId String
   userId         String
-  isRead         Boolean  @default(false)
+  isRead         Boolean         @default(false)
   readAt         DateTime?
-
   notification   AppNotification @relation(fields: [notificationId], references: [id], onDelete: Cascade)
   user           AppUser         @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
@@ -656,7 +562,6 @@ model ClientSettings {
   clientDefaultRoleId     String?
   chatLinkUrl             String?
   updatedAt               DateTime @updatedAt
-
-  consultantDefaultRole   AppRole? @relation("ConsultantDefaultRole", fields: [consultantDefaultRoleId], references: [id], onDelete: SetNull)
-  clientDefaultRole       AppRole? @relation("ClientDefaultRole", fields: [clientDefaultRoleId], references: [id], onDelete: SetNull)
+  clientDefaultRole       AppRole? @relation("ClientDefaultRole", fields: [clientDefaultRoleId], references: [id])
+  consultantDefaultRole   AppRole? @relation("ConsultantDefaultRole", fields: [consultantDefaultRoleId], references: [id])
 }

@@ -140,8 +140,7 @@ export const dataApi = {
   currencies:      { getAll: s => api.get('/admin/data/currencies',       { params: { search: s } }), create: b => api.post('/admin/data/currencies', b),       update: (id,b) => api.put(`/admin/data/currencies/${id}`, b),       delete: id => api.delete(`/admin/data/currencies/${id}`)       },
   countries:       { getAll: s => api.get('/admin/data/countries',        { params: { search: s } }), create: b => api.post('/admin/data/countries', b),        update: (id,b) => api.put(`/admin/data/countries/${id}`, b),        delete: id => api.delete(`/admin/data/countries/${id}`)        },
   provinces:       { getAll: (cId,s) => api.get('/admin/data/provinces',  { params: { countryId: cId, search: s } }), create: b => api.post('/admin/data/provinces', b), update: (id,b) => api.put(`/admin/data/provinces/${id}`, b), delete: id => api.delete(`/admin/data/provinces/${id}`) },
-  cities:          { getAll: (pId,s) => api.get('/admin/data/cities',     { params: { provinceId: pId, search: s } }), create: b => api.post('/admin/data/cities', b),    update: (id,b) => api.put(`/admin/data/cities/${id}`, b),    delete: id => api.delete(`/admin/data/cities/${id}`)    },
-  locationTypes:   { getAll: s => api.get('/admin/data/location-types',   { params: { search: s } }), create: b => api.post('/admin/data/location-types', b),   update: (id,b) => api.put(`/admin/data/location-types/${id}`, b),   delete: id => api.delete(`/admin/data/location-types/${id}`)   },
+  cities:          { getAll: (pId,s) => api.get('/admin/data/cities',     { params: { provinceId: pId, search: s } }), create: b => api.post('/admin/data/cities', b),    update: (id,b) => api.put(`/admin/data/cities/${id}`, b),    delete: id => api.delete(`/admin/data/cities/${id}`)    },
 }
 
 // ── FISCAL YEAR ───────────────────────────────────────────────────────────────

@@ -1,19 +1,11 @@
-﻿const { PrismaClient } = require("@prisma/client");
+const { PrismaClient } = require("@prisma/client");
 const bcrypt = require("bcryptjs");
 
 const prisma = new PrismaClient();
 
 async function getRole(roleName) {
-  let role = await prisma.appRole.findFirst({
-    where: { roleName }
-  });
-
-  if (!role) {
-    role = await prisma.appRole.create({
-      data: { roleName }
-    });
-  }
-
+  let role = await prisma.appRole.findFirst({ where: { roleName } });
+  if (!role) role = await prisma.appRole.create({ data: { roleName } });
   return role;
 }
 
@@ -45,51 +37,7 @@ async function main() {
   const consultantRole = await getRole("Consultant");
   const userRole = await getRole("User");
 
-  let locationType = await prisma.locationType.findFirst({
-    where: { locationTypeName: "Main" }
-  });
-
-  if (!locationType) {
-    locationType = await prisma.locationType.create({
-      data: {
-        locationTypeName: "Main",
-        shortName: "MAIN"
-      }
-    });
-  }
-
-  let location = await prisma.location.findFirst({
-    where: { locationName: "Head Office" }
-  });
-
-  if (!location) {
-    location = await prisma.location.create({
-      data: {
-        locationName: "Head Office",
-        locationAddress: "Main Office",
-        isActive: true,
-        locationTypeId: locationType.id
-      }
-    });
-  }
-
-  let fiscalYear = await prisma.fiscalYear.findFirst({
-    where: { name: "FY 2026" }
-  });
-
-  if (!fiscalYear) {
-    fiscalYear = await prisma.fiscalYear.create({
-      data: {
-        name: "FY 2026",
-        startDate: new Date("2026-01-01"),
-        endDate: new Date("2026-12-31"),
-        isActive: true,
-        isCurrent: true
-      }
-    });
-  }
-
-  const admin = await createUser({
+  await createUser({
     userName: "Admin",
     loginId: "admin",
     email: "admin@tenx.com",
@@ -197,27 +145,9 @@ async function main() {
 
   await prisma.consultantAvailability.createMany({
     data: [
-      {
-        consultantId: consultantProfile.id,
-        dayOfWeek: 1,
-        startTime: "10:00",
-        endTime: "18:00",
-        isActive: true
-      },
-      {
-        consultantId: consultantProfile.id,
-        dayOfWeek: 2,
-        startTime: "10:00",
-        endTime: "18:00",
-        isActive: true
-      },
-      {
-        consultantId: consultantProfile.id,
-        dayOfWeek: 3,
-        startTime: "10:00",
-        endTime: "18:00",
-        isActive: true
-      }
+      { consultantId: consultantProfile.id, dayOfWeek: 1, startTime: "10:00", endTime: "18:00", isActive: true },
+      { consultantId: consultantProfile.id, dayOfWeek: 2, startTime: "10:00", endTime: "18:00", isActive: true },
+      { consultantId: consultantProfile.id, dayOfWeek: 3, startTime: "10:00", endTime: "18:00", isActive: true }
     ]
   });
 

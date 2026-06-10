@@ -65,4 +65,8 @@ logs/
 *.log
 npm-debug.log*
 
-.fake
+.fakenode_modules/
+.env
+.env.*
+!.env.example
+!.env.hostinger.example

@@ -16,9 +16,7 @@ const nav = [
   { label: 'Role Permissions', icon: ShieldCheck,     path: '/role-permissions' },
   { section: 'Billing' },
   { label: 'Invoices & Purchases', icon: Receipt,     path: '/invoices' },
-  { section: 'Setup' },
-  { label: 'Locations',        icon: MapPin,          path: '/locations' },
-  { label: 'Fiscal Years',     icon: CalendarDays,    path: '/fiscal-years' },
+  { section: 'Setup' },
   { label: 'Settings',         icon: Settings,        path: '/settings' },
   { section: 'Data' },
   { label: 'Data Constants',   icon: Database,        path: '/data' },

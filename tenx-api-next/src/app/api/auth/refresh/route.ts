@@ -1,4 +1,4 @@
-﻿import { NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { z } from "zod";
 import { generateAccessToken } from "@/lib/auth";
@@ -33,18 +33,9 @@ export async function POST(req: Request) {
       );
     }
 
-    const pref = await prisma.userLoginPreference.findUnique({
-      where: {
-        userId: tokenRecord.userId,
-      },
-    });
-
     const accessToken = generateAccessToken({
       userId: tokenRecord.user.id,
       role: tokenRecord.user.role?.roleName || "",
-      locationId: pref?.locationId || undefined,
-      connection: pref?.connection || "Production",
-      fiscalYearId: pref?.fiscalYearId || undefined,
     });
 
     return NextResponse.json({
@@ -56,7 +47,7 @@ export async function POST(req: Request) {
       },
     });
   } catch (error) {
-    console.error(error);
+    console.error("Refresh Error:", error);
     return NextResponse.json(
       { success: false, message: "Internal Server Error" },
       { status: 500 }

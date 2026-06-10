@@ -1,4 +1,4 @@
-﻿import { NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
 
@@ -35,9 +35,6 @@ export async function POST(req: Request) {
         userName: user.userName,
         loginId: user.loginId,
         role: user.role?.roleName || '',
-        locations: [],
-        fiscalYears: [],
-        connections: ['Production'],
       },
     });
   } catch (error) {

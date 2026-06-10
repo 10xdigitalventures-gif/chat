@@ -1,4 +1,4 @@
-﻿import { NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
 import bcrypt from 'bcryptjs';
@@ -22,64 +22,6 @@ async function ensureRole(roleName: string) {
   }
 
   return role;
-}
-
-async function ensureLocation() {
-  let locationType = await prisma.locationType.findFirst({
-    where: { locationTypeName: 'Main' },
-  });
-
-  if (!locationType) {
-    locationType = await prisma.locationType.create({
-      data: {
-        locationTypeName: 'Main',
-        shortName: 'MAIN',
-      },
-    });
-  }
-
-  let location = await prisma.location.findFirst({
-    where: { locationName: 'Head Office' },
-  });
-
-  if (!location) {
-    location = await prisma.location.create({
-      data: {
-        locationName: 'Head Office',
-        locationAddress: 'Main Office',
-        isActive: true,
-        locationTypeId: locationType.id,
-      },
-    });
-  }
-
-  return location;
-}
-
-async function ensureFiscalYear() {
-  let fiscalYear = await prisma.fiscalYear.findFirst({
-    where: { isCurrent: true, isActive: true },
-  });
-
-  if (!fiscalYear) {
-    fiscalYear = await prisma.fiscalYear.findFirst({
-      where: { name: 'FY 2026' },
-    });
-  }
-
-  if (!fiscalYear) {
-    fiscalYear = await prisma.fiscalYear.create({
-      data: {
-        name: 'FY 2026',
-        startDate: new Date('2026-01-01'),
-        endDate: new Date('2026-12-31'),
-        isActive: true,
-        isCurrent: true,
-      },
-    });
-  }
-
-  return fiscalYear;
 }
 
 function makeLoginId(email: string) {
@@ -109,8 +51,6 @@ export async function POST(req: Request) {
     }
 
     const role = await ensureRole('User');
-    const location = await ensureLocation();
-    const fiscalYear = await ensureFiscalYear();
     const passwordHash = await bcrypt.hash(validated.password, 10);
 
     let loginId = makeLoginId(email);
@@ -148,9 +88,6 @@ export async function POST(req: Request) {
     const accessToken = generateAccessToken({
       userId: user.id,
       role: user.role?.roleName || 'User',
-      locationId: location.id,
-      connection: 'Production',
-      fiscalYearId: fiscalYear.id,
     });
 
     const refreshToken = generateRefreshToken();
@@ -160,24 +97,6 @@ export async function POST(req: Request) {
         userId: user.id,
         token: refreshToken,
         expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
-      },
-    });
-
-    await prisma.userLoginPreference.upsert({
-      where: { userId: user.id },
-      update: {
-        locationId: location.id,
-        fiscalYearId: fiscalYear.id,
-        connection: 'Production',
-        rememberMe: true,
-        updatedAt: new Date(),
-      },
-      create: {
-        userId: user.id,
-        locationId: location.id,
-        fiscalYearId: fiscalYear.id,
-        connection: 'Production',
-        rememberMe: true,
       },
     });
 

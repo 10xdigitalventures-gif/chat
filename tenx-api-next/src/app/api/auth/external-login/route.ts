@@ -9,9 +9,7 @@ const externalLoginSchema = z.object({
   idToken: z.string(), // Client must send the actual OAuth ID Token
   email: z.string().email(),
   displayName: z.string().optional(),
-  avatarUrl: z.string().optional(),
-  locationId: z.string().uuid().optional(),
-  fiscalYearId: z.string().uuid().optional(),
+  avatarUrl: z.string().optional(),
   connection: z.string().optional(),
 });
 
@@ -83,10 +81,8 @@ export async function POST(req: Request) {
 
     const accessToken = generateAccessToken({
       userId: user.id,
-      role: user.role?.roleName || '',
-      locationId: validated.locationId,
-      connection: validated.connection || 'Production',
-      fiscalYearId: validated.fiscalYearId,
+      role: user.role?.roleName || '',
+      connection: validated.connection || 'Production',
     });
 
     const refreshToken = generateRefreshToken();
