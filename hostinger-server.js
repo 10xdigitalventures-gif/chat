@@ -1,32 +1,90 @@
 ﻿/*
- * Hostinger single-process server for 10X Convo.
+ * Wasmer/Hostinger single-process server for 10X Convo.
  *
  * Serves:
- *   /api/*              -> Next.js API backend in tenx-api-next
- *   /api/socket/io      -> Next.js Socket.IO endpoint
- *   /admin/*            -> Admin portal SPA build
- *   /consultant/*       -> Consultant portal SPA build
- *   /*                  -> User portal SPA build
- *
- * Legacy /user/* URLs are redirected to /*:
- *   /user/login    -> /login
- *   /user/register -> /register
+ *   /api/*        -> Next.js API backend in tenx-api-next
+ *   /admin/*      -> Admin portal SPA build
+ *   /consultant/* -> Consultant portal SPA build
+ *   /*            -> User portal SPA build
  */
 
 const fs = require('fs')
 const http = require('http')
 const path = require('path')
-const Module = require('module')
 const { URL } = require('url')
 
 const rootDir = __dirname
 const apiDir = path.join(rootDir, 'tenx-api-next')
-let next
-try {
-  next = require(path.join(apiDir, '.next', 'standalone', 'node_modules', 'next'))
-} catch {
-  next = require(path.join(apiDir, 'node_modules', 'next'))
+
+function exists(p) {
+  try { return fs.existsSync(p) } catch { return false }
 }
+
+function findNextPackage(startDir, maxDepth = 6) {
+  const seen = new Set()
+
+  function walk(dir, depth) {
+    if (!dir || depth > maxDepth || seen.has(dir)) return null
+    seen.add(dir)
+
+    const direct = path.join(dir, 'node_modules', 'next')
+    if (exists(path.join(direct, 'package.json'))) return direct
+
+    let entries = []
+    try {
+      entries = fs.readdirSync(dir, { withFileTypes: true })
+    } catch {
+      return null
+    }
+
+    for (const entry of entries) {
+      if (!entry.isDirectory()) continue
+      if (entry.name === '.git' || entry.name === 'cache') continue
+
+      const found = walk(path.join(dir, entry.name), depth + 1)
+      if (found) return found
+    }
+
+    return null
+  }
+
+  return walk(startDir, 0)
+}
+
+const nextCandidates = [
+  path.join(apiDir, '.next', 'standalone', 'node_modules', 'next'),
+  path.join(apiDir, '.next', 'standalone', 'tenx-api-next', 'node_modules', 'next'),
+  path.join(apiDir, 'node_modules', 'next'),
+  path.join(rootDir, 'node_modules', 'next'),
+].filter(p => exists(path.join(p, 'package.json')))
+
+let nextPackageDir = nextCandidates[0]
+
+if (!nextPackageDir) {
+  nextPackageDir = findNextPackage(path.join(apiDir, '.next', 'standalone'))
+}
+
+if (!nextPackageDir) {
+  console.error('Could not find Next.js runtime package.')
+  console.error('Checked candidates:')
+  for (const p of [
+    path.join(apiDir, '.next', 'standalone', 'node_modules', 'next'),
+    path.join(apiDir, '.next', 'standalone', 'tenx-api-next', 'node_modules', 'next'),
+    path.join(apiDir, 'node_modules', 'next'),
+    path.join(rootDir, 'node_modules', 'next'),
+  ]) console.error(' - ' + p)
+
+  try {
+    console.error('standalone contents:', fs.readdirSync(path.join(apiDir, '.next', 'standalone')))
+  } catch (e) {
+    console.error('No standalone directory:', e.message)
+  }
+
+  process.exit(1)
+}
+
+console.log('Loading Next.js from:', nextPackageDir)
+const next = require(nextPackageDir)
 
 const port = Number(process.env.PORT || 5000)
 const hostname = process.env.HOST || '0.0.0.0'
@@ -90,7 +148,7 @@ function sendFile(res, filePath) {
 }
 
 function serveSpaFromDist(res, distDir, relativePath, label) {
-  if (!fs.existsSync(distDir)) {
+  if (!exists(distDir)) {
     res.statusCode = 503
     res.setHeader('Content-Type', 'text/plain; charset=utf-8')
     res.end(`${label} portal is not built. Run npm run build first.`)
@@ -101,7 +159,7 @@ function serveSpaFromDist(res, distDir, relativePath, label) {
   if (!rel || rel === '/') rel = '/index.html'
 
   const filePath = safeJoin(distDir, rel)
-  if (filePath && fs.existsSync(filePath) && fs.statSync(filePath).isFile()) {
+  if (filePath && exists(filePath) && fs.statSync(filePath).isFile()) {
     sendFile(res, filePath)
   } else {
     sendFile(res, path.join(distDir, 'index.html'))
@@ -128,14 +186,12 @@ async function main() {
     const parsedUrl = new URL(req.url || '/', `http://${req.headers.host || 'localhost'}`)
     const pathname = decodeURIComponent(parsedUrl.pathname)
 
-    // Stop favicon redirect loops.
     if (pathname === '/favicon.ico') {
       res.statusCode = 204
       res.end()
       return
     }
 
-    // Backward compatibility: /user/* -> /*
     if (pathname === '/user' || pathname.startsWith('/user/')) {
       const stripped = pathname.replace(/^\/user/, '') || '/'
       res.statusCode = 302
@@ -144,8 +200,6 @@ async function main() {
       return
     }
 
-    // API and Next internals must be handled by Next.js only.
-    // Do not redirect these routes.
     if (pathname.startsWith('/api') || pathname.startsWith('/_next')) {
       req.headers['x-forwarded-proto'] = req.headers['x-forwarded-proto'] || 'https'
       req.headers['x-forwarded-host'] = req.headers['x-forwarded-host'] || req.headers.host
@@ -153,11 +207,8 @@ async function main() {
       return
     }
 
-    // Admin and Consultant portals stay under subpaths.
     if (tryServePrefixedPortal(res, pathname)) return
 
-    // Everything else is User portal at root:
-    // /, /login, /register, /messages, /assets/*, etc.
     serveSpaFromDist(res, userDist, pathname, 'user')
   })
 
@@ -171,6 +222,6 @@ async function main() {
 }
 
 main().catch(err => {
-  console.error(err)
+  console.error('Failed to start app:', err)
   process.exit(1)
 })
