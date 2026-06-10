@@ -1,5 +1,6 @@
 ﻿const { spawnSync } = require('child_process')
 const fs = require('fs')
+const path = require('path')
 
 const defaultBuildEnv = {
   ...process.env,
@@ -46,8 +47,15 @@ function ensureExists(filePath) {
   }
 }
 
+function removeDir(dir) {
+  if (fs.existsSync(dir)) {
+    console.log(`Removing ${dir}`)
+    fs.rmSync(dir, { recursive: true, force: true })
+  }
+}
+
 function installSubapp(dir) {
-  ensureExists(`${dir}/package.json`)
+  ensureExists(path.join(dir, 'package.json'))
   run('npm', ['--prefix', dir, 'install', '--include=dev'])
 }
 
@@ -63,12 +71,15 @@ function buildPortal(name, basePath) {
       VITE_API_URL: '/api',
     },
   })
+
+  // Frontend runtime only needs dist/. Remove node_modules to keep Wasmer image small.
+  removeDir(path.join(dir, 'node_modules'))
 }
 
 // Install Next.js API dependencies after Wasmer copies the full repo.
 installSubapp('tenx-api-next')
 
-// Install/build frontend portals.
+// Build frontend portals.
 buildPortal('admin-portal', '/admin/')
 buildPortal('consultant-portal', '/consultant/')
 buildPortal('user-portal', '/')
@@ -81,3 +92,16 @@ run('npx', ['prisma', 'generate'], {
 
 // Build Next.js backend.
 run('npm', ['--prefix', 'tenx-api-next', 'run', 'build'])
+
+// Remove Next build cache. Runtime does not need it.
+removeDir(path.join('tenx-api-next', '.next', 'cache'))
+
+// Keep only production dependencies for the Next.js API runtime.
+run('npm', ['--prefix', 'tenx-api-next', 'prune', '--omit=dev', '--ignore-scripts'])
+
+// Extra cleanup.
+removeDir(path.join('tenx-api-next', 'node_modules', '.cache'))
+removeDir(path.join('tenx-api-next', '.turbo'))
+removeDir(path.join('tenx-api-next', 'coverage'))
+
+console.log('\n✅ Build completed and runtime bundle cleaned.')
