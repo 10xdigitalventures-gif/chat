@@ -1,4 +1,4 @@
-import React from 'react'
+﻿import React from 'react'
 import { Routes, Route, Navigate } from 'react-router-dom'
 import { Toaster } from 'react-hot-toast'
 import { useAuthStore } from './store/authStore'
@@ -6,10 +6,12 @@ import AdminLayout from './components/AdminLayout'
 import LoginPage from './pages/LoginPage'
 import DashboardPage from './pages/DashboardPage'
 import UsersPage from './pages/UsersPage'
-import RolesPage from './pages/RolesPage'
+import RolesPage from './pages/RolesPage'
+
 import SettingsPage from './pages/SettingsPage'
 import ErrorLogsPage from './pages/ErrorLogsPage'
-import DataConstantsPage from './pages/DataConstantsPage'
+import DataConstantsPage from './pages/DataConstantsPage'
+
 import NotificationTemplatesPage from './pages/NotificationTemplatesPage'
 import NotificationsPage from './pages/NotificationsPage'
 import RoleModulesPage from './pages/RoleModulesPage'
@@ -34,7 +36,7 @@ export default function App() {
           <Route index                  element={<DashboardPage />} />
           <Route path="users"           element={<UsersPage />} />
           <Route path="roles"           element={<RolesPage />} />
-          <Route path="role-permissions" element={<RoleModulesPage />} />} />} />
+          <Route path="role-permissions" element={<RoleModulesPage />} />
           <Route path="settings"        element={<SettingsPage />} />
           <Route path="data"            element={<DataConstantsPage />} />
           <Route path="doc-movements"   element={<DocumentMovementsPage />} />
@@ -49,3 +51,5 @@ export default function App() {
     </>
   )
 }
+
+
