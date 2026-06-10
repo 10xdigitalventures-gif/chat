@@ -1,6 +1,7 @@
 ﻿import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  output: 'standalone',
   skipTrailingSlashRedirect: true,
   skipMiddlewareUrlNormalize: true,
   outputFileTracingRoot: process.cwd(),

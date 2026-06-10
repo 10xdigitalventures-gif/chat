@@ -20,7 +20,12 @@ const { URL } = require('url')
 
 const rootDir = __dirname
 const apiDir = path.join(rootDir, 'tenx-api-next')
-const next = require(path.join(apiDir, 'node_modules', 'next'))
+let next
+try {
+  next = require(path.join(apiDir, '.next', 'standalone', 'node_modules', 'next'))
+} catch {
+  next = require(path.join(apiDir, 'node_modules', 'next'))
+}
 
 const port = Number(process.env.PORT || 5000)
 const hostname = process.env.HOST || '0.0.0.0'
