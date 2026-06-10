@@ -1,4 +1,5 @@
-﻿const { spawnSync } = require('child_process')
+﻿const path = require('path')
+const { spawnSync } = require('child_process')
 
 function run(command, args, options = {}) {
   console.log(`\n> ${command} ${args.join(' ')}`)
@@ -36,4 +37,8 @@ if (process.env.RUN_DB_MIGRATIONS === 'true') {
   console.log('Skipping DB migrations. Set RUN_DB_MIGRATIONS=true to enable.')
 }
 
-runRequired('node', ['hostinger-server.js'])
+// IMPORTANT:
+// Do not spawn "node hostinger-server.js" on Wasmer EdgeJS.
+// Start the server in the same JS process.
+console.log('Starting app server...')
+require(path.join(__dirname, '..', 'hostinger-server.js'))
