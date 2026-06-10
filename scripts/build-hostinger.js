@@ -76,7 +76,7 @@ function buildPortal(name, basePath) {
   removeDir(path.join(dir, 'node_modules'))
 }
 
-// Install API dependencies for build.
+// Install API dependencies for build/runtime.
 installSubapp('tenx-api-next')
 
 // Build portals.
@@ -84,19 +84,17 @@ buildPortal('admin-portal', '/admin/')
 buildPortal('consultant-portal', '/consultant/')
 buildPortal('user-portal', '/')
 
-// Generate Prisma client only. Do NOT migrate/seed during build.
+// Generate Prisma client with required binary targets.
 run('npx', ['prisma', 'generate'], {
   cwd: 'tenx-api-next',
 })
 
-// Build Next.js backend with standalone output.
+// Build Next.js backend.
 run('npm', ['--prefix', 'tenx-api-next', 'run', 'build'])
-
-// Ensure standalone exists before removing full node_modules.
-ensureExists(path.join('tenx-api-next', '.next', 'standalone'))
 
 // Remove caches/dev-only folders.
 removeDir(path.join('tenx-api-next', '.next', 'cache'))
+removeDir(path.join('tenx-api-next', '.next', 'standalone'))
 removeDir(path.join('tenx-api-next', '.turbo'))
 removeDir(path.join('tenx-api-next', 'coverage'))
 removeDir(path.join('tenx-api-next', '__tests__'))
@@ -104,12 +102,19 @@ removeDir(path.join('tenx-api-next', '.vercel'))
 removeDir(path.join('tenx-api-next', '.open-next'))
 removeDir(path.join('tenx-api-next', 'node_modules', '.cache'))
 
-// CRITICAL: Next standalone has traced runtime dependencies.
-// Remove full API node_modules to reduce Wasmer bundle size.
-removeDir(path.join('tenx-api-next', 'node_modules'))
-
-// Remove standalone cache if present.
-removeDir(path.join('tenx-api-next', '.next', 'standalone', '.next', 'cache'))
-removeDir(path.join('tenx-api-next', '.next', 'standalone', 'node_modules', '.cache'))
+// Keep tenx-api-next/node_modules because custom Next server needs full next runtime.
+// Prune dev dependencies but do not force dev include.
+run('npm', ['--prefix', 'tenx-api-next', 'prune', '--omit=dev', '--ignore-scripts'], {
+  env: {
+    ...process.env,
+    NPM_CONFIG_PRODUCTION: 'true',
+    NPM_CONFIG_INCLUDE: '',
+    NEXT_PUBLIC_URL: defaultBuildEnv.NEXT_PUBLIC_URL,
+    JWT_SECRET: defaultBuildEnv.JWT_SECRET,
+    NEXTAUTH_SECRET: defaultBuildEnv.NEXTAUTH_SECRET,
+    STRIPE_SECRET_KEY: defaultBuildEnv.STRIPE_SECRET_KEY,
+    STRIPE_WEBHOOK_SECRET: defaultBuildEnv.STRIPE_WEBHOOK_SECRET,
+  }
+})
 
 console.log('\n✅ Build completed and runtime bundle cleaned.')
