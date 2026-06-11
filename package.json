@@ -8,7 +8,8 @@
     "start": "node scripts/start-api.js",
     "db:generate": "npx prisma generate",
     "db:migrate": "npx prisma migrate deploy",
-    "db:seed": "node prisma/seed-all.cjs"
+    "db:seed": "node prisma/seed-all.cjs",
+    "hostinger:build": "npm install && npx prisma generate && npm run build"
   },
   "dependencies": {
     "@prisma/client": "^6.19.3",
