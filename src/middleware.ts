@@ -1,55 +1,55 @@
-import { NextResponse } from "next/server";
+﻿import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { verifyAccessToken } from "@/lib/auth";
 
+function getCorsHeaders(request: NextRequest) {
+  const allowedOrigins = (process.env.CORS_ORIGIN || "https://new.10xdigitalventures.com")
+    .split(",")
+    .map(x => x.trim())
+    .filter(Boolean);
+
+  const origin = request.headers.get("origin") || "";
+  const allowOrigin = allowedOrigins.includes(origin)
+    ? origin
+    : allowedOrigins[0] || "*";
+
+  return {
+    "Access-Control-Allow-Origin": allowOrigin,
+    "Access-Control-Allow-Methods": "GET,POST,PUT,PATCH,DELETE,OPTIONS",
+    "Access-Control-Allow-Headers": "Content-Type, Authorization",
+    "Access-Control-Allow-Credentials": "false",
+    "Vary": "Origin",
+  };
+}
+
 export function middleware(request: NextRequest) {
-  const corsOrigin = process.env.CORS_ORIGIN || "https://new.10xdigitalventures.com";
+  const pathname = request.nextUrl.pathname;
+  const corsHeaders = getCorsHeaders(request);
 
   if (request.method === "OPTIONS") {
     return new NextResponse(null, {
       status: 204,
-      headers: {
-        "Access-Control-Allow-Origin": corsOrigin,
-        "Access-Control-Allow-Methods": "GET,POST,PUT,PATCH,DELETE,OPTIONS",
-        "Access-Control-Allow-Headers": "Content-Type, Authorization",
-      },
+      headers: corsHeaders,
     });
   }
-  const pathname = request.nextUrl.pathname;
 
   const publicRoutes = [
     "/api/auth/register",
     "/api/auth/login/step1",
     "/api/auth/login/step2",
-    "/api/auth/refresh",    "/api/auth/forgot-password",
+    "/api/auth/refresh",
+    "/api/auth/forgot-password",
     "/api/auth/verify-reset-token",
     "/api/auth/reset-password",
-    "/api/user/consultants"
+    "/api/user/consultants",
   ];
 
   if (publicRoutes.some((route) => pathname.startsWith(route))) {
-    return NextResponse.next();
-  }
-
-  const requestHeaders = new Headers(request.headers);
-
-  if (process.env.DEV_AUTH_BYPASS === "true") {
-    if (pathname.startsWith("/api/admin")) {
-      requestHeaders.set("x-user-id", process.env.DEV_ADMIN_USER_ID || "");
-      requestHeaders.set("x-user-role", "Admin");
-    } else if (pathname.startsWith("/api/consultant")) {
-      requestHeaders.set("x-user-id", process.env.DEV_CONSULTANT_USER_ID || "");
-      requestHeaders.set("x-user-role", "Consultant");
-    } else if (pathname.startsWith("/api/user") || pathname.startsWith("/api/credits") || pathname.startsWith("/api/invoices")) {
-      requestHeaders.set("x-user-id", process.env.DEV_USER_ID || "");
-      requestHeaders.set("x-user-role", "User");
-    }
-
-    return NextResponse.next({
-      request: {
-        headers: requestHeaders
-      }
+    const response = NextResponse.next();
+    Object.entries(corsHeaders).forEach(([key, value]) => {
+      response.headers.set(key, value);
     });
+    return response;
   }
 
   const authHeader = request.headers.get("authorization");
@@ -57,7 +57,7 @@ export function middleware(request: NextRequest) {
   if (!authHeader || !authHeader.startsWith("Bearer ")) {
     return NextResponse.json(
       { success: false, message: "Unauthorized" },
-      { status: 401 }
+      { status: 401, headers: corsHeaders }
     );
   }
 
@@ -67,7 +67,7 @@ export function middleware(request: NextRequest) {
   if (!payload) {
     return NextResponse.json(
       { success: false, message: "Unauthorized" },
-      { status: 401 }
+      { status: 401, headers: corsHeaders }
     );
   }
 
@@ -76,7 +76,7 @@ export function middleware(request: NextRequest) {
   if (pathname.startsWith("/api/admin") && !role.includes("admin")) {
     return NextResponse.json(
       { success: false, message: "Forbidden" },
-      { status: 403 }
+      { status: 403, headers: corsHeaders }
     );
   }
 
@@ -86,7 +86,7 @@ export function middleware(request: NextRequest) {
   ) {
     return NextResponse.json(
       { success: false, message: "Forbidden" },
-      { status: 403 }
+      { status: 403, headers: corsHeaders }
     );
   }
 
@@ -96,24 +96,25 @@ export function middleware(request: NextRequest) {
   ) {
     return NextResponse.json(
       { success: false, message: "Forbidden" },
-      { status: 403 }
+      { status: 403, headers: corsHeaders }
     );
   }
 
+  const requestHeaders = new Headers(request.headers);
   requestHeaders.set("x-user-id", payload.userId);
   requestHeaders.set("x-user-role", payload.role || "");
 
-  return NextResponse.next({
-    request: {
-      headers: requestHeaders
-    }
+  const response = NextResponse.next({
+    request: { headers: requestHeaders },
   });
+
+  Object.entries(corsHeaders).forEach(([key, value]) => {
+    response.headers.set(key, value);
+  });
+
+  return response;
 }
 
 export const config = {
-  matcher: "/api/:path*"
+  matcher: "/api/:path*",
 };
-
-
-
-
