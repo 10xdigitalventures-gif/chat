@@ -16,6 +16,7 @@
     "@types/simple-peer": "^9.11.9",
     "axios": "^1.16.1",
     "bcryptjs": "^2.4.3",
+    "glob": "^13.0.6",
     "jsonwebtoken": "^9.0.2",
     "next": "^15.1.0",
     "react": "^19.0.0",
