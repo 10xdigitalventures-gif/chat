@@ -1,6 +1,8 @@
-﻿import { NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import Stripe from 'stripe';
+
+export const dynamic = 'force-dynamic';
 
 function getStripe() {
   const key = process.env.STRIPE_SECRET_KEY || '';
@@ -9,9 +11,7 @@ function getStripe() {
     return null;
   }
 
-  return new Stripe(key, {
-    apiVersion: '2025-12-17.clover',
-  });
+  return new Stripe(key);
 }
 
 export async function POST(req: Request) {
@@ -26,6 +26,7 @@ export async function POST(req: Request) {
     }
 
     const body = await req.json();
+
     const amount = Number(body.amount || 0);
     const currency = String(body.currency || 'usd').toLowerCase();
     const provider = String(body.provider || body.gateway || 'manual').toLowerCase();
@@ -99,7 +100,6 @@ export async function POST(req: Request) {
       });
     }
 
-    // Manual/dummy payment flow for development or non-card providers.
     return NextResponse.json({
       success: true,
       message: 'Payment created',
@@ -110,6 +110,7 @@ export async function POST(req: Request) {
     });
   } catch (error) {
     console.error('Purchase credits error:', error);
+
     return NextResponse.json(
       { success: false, message: 'Internal Server Error' },
       { status: 500 }
