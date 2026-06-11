@@ -1,10 +1,10 @@
 {
-  "name": "tenxconvo-workspace",
+  "name": "tenx-frontend-app",
   "private": true,
   "scripts": {
     "build": "node scripts/build-frontends-only.js",
     "start": "node frontend-server.js"
   },
-  "devDependencies": {},
-  "dependencies": {}
+  "dependencies": {},
+  "devDependencies": {}
 }

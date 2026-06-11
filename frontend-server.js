@@ -24,27 +24,50 @@ const mime = {
   '.ico': 'image/x-icon',
   '.woff': 'font/woff',
   '.woff2': 'font/woff2',
+  '.ttf': 'font/ttf',
+  '.map': 'application/json; charset=utf-8',
+}
+
+function safeJoin(baseDir, requestPath) {
+  const cleanPath = path.normalize(requestPath).replace(/^(\.\.[/\\])+/, '')
+  const filePath = path.join(baseDir, cleanPath)
+  if (!filePath.startsWith(baseDir)) return null
+  return filePath
 }
 
 function send(res, file) {
-  if (!fs.existsSync(file) || !fs.statSync(file).isFile()) {
+  if (!file || !fs.existsSync(file) || !fs.statSync(file).isFile()) {
     res.statusCode = 404
     res.end('Not found')
     return
   }
 
-  const ext = path.extname(file)
+  const ext = path.extname(file).toLowerCase()
   res.setHeader('Content-Type', mime[ext] || 'application/octet-stream')
+
+  if (ext === '.html') {
+    res.setHeader('Cache-Control', 'no-cache')
+  } else {
+    res.setHeader('Cache-Control', 'public, max-age=31536000, immutable')
+  }
+
   fs.createReadStream(file).pipe(res)
 }
 
 function serveSpa(res, dist, pathname, prefix = '') {
+  if (!fs.existsSync(dist)) {
+    res.statusCode = 503
+    res.setHeader('Content-Type', 'text/plain; charset=utf-8')
+    res.end(`Portal not built: ${dist}`)
+    return
+  }
+
   let rel = prefix ? pathname.slice(prefix.length) : pathname
   if (!rel || rel === '/') rel = '/index.html'
 
-  const file = path.join(dist, path.normalize(rel))
+  const file = safeJoin(dist, rel)
 
-  if (fs.existsSync(file) && fs.statSync(file).isFile()) {
+  if (file && fs.existsSync(file) && fs.statSync(file).isFile()) {
     send(res, file)
   } else {
     send(res, path.join(dist, 'index.html'))
@@ -71,6 +94,7 @@ http.createServer((req, res) => {
     return
   }
 
+  // User portal is at root
   serveSpa(res, userDist, pathname, '')
 }).listen(port, host, () => {
   console.log(`Frontend app running on http://${host}:${port}`)
