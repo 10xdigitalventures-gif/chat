@@ -1,4 +1,4 @@
-﻿import { NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { verifyAccessToken } from "@/lib/auth";
 
@@ -33,7 +33,8 @@ export function middleware(request: NextRequest) {
     });
   }
 
-  const publicRoutes = [`r`n    "/api/health",
+  const publicRoutes = [
+    "/api/health",
     "/api/auth/register",
     "/api/auth/login/step1",
     "/api/auth/login/step2",
@@ -46,9 +47,11 @@ export function middleware(request: NextRequest) {
 
   if (publicRoutes.some((route) => pathname.startsWith(route))) {
     const response = NextResponse.next();
+
     Object.entries(corsHeaders).forEach(([key, value]) => {
       response.headers.set(key, value);
     });
+
     return response;
   }
 
@@ -118,4 +121,3 @@ export function middleware(request: NextRequest) {
 export const config = {
   matcher: "/api/:path*",
 };
-
