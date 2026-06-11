@@ -4,7 +4,7 @@ const path = require('path')
 const { URL } = require('url')
 
 const rootDir = __dirname
-const port = Number(process.env.PORT || 5000)
+const port = Number(process.env.PORT || 8080)
 const host = process.env.HOST || '0.0.0.0'
 
 const adminDist = path.join(rootDir, 'tenx-frontend', 'admin-portal', 'dist')
@@ -102,3 +102,4 @@ http.createServer((req, res) => {
   console.log('Admin: /admin')
   console.log('Consultant: /consultant')
 })
+
