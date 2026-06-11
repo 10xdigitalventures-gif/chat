@@ -33,7 +33,7 @@ export function middleware(request: NextRequest) {
     });
   }
 
-  const publicRoutes = [
+  const publicRoutes = [`r`n    "/api/health",
     "/api/auth/register",
     "/api/auth/login/step1",
     "/api/auth/login/step2",
@@ -118,3 +118,4 @@ export function middleware(request: NextRequest) {
 export const config = {
   matcher: "/api/:path*",
 };
+
