@@ -1,4 +1,4 @@
-﻿import { NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { verifyAccessToken } from "@/lib/auth";
 
@@ -21,9 +21,7 @@ export function middleware(request: NextRequest) {
     "/api/auth/register",
     "/api/auth/login/step1",
     "/api/auth/login/step2",
-    "/api/auth/refresh",
-    "/api/auth/external-login",
-    "/api/auth/forgot-password",
+    "/api/auth/refresh",    "/api/auth/forgot-password",
     "/api/auth/verify-reset-token",
     "/api/auth/reset-password",
     "/api/user/consultants"
@@ -115,6 +113,7 @@ export function middleware(request: NextRequest) {
 export const config = {
   matcher: "/api/:path*"
 };
+
 
 
 
