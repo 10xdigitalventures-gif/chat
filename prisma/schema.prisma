@@ -567,3 +567,4 @@ model ClientSettings {
   consultantDefaultRole   AppRole? @relation("ConsultantDefaultRole", fields: [consultantDefaultRoleId], references: [id])
 }
 
+
