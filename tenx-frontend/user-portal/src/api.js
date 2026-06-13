@@ -119,6 +119,9 @@ export const useAuthStore = create((set, get) => ({
   step1Data: null,
 
   login: async (email, password) => {
+    localStorage.removeItem('accessToken')
+    localStorage.removeItem('refreshToken')
+    localStorage.removeItem('user')
     set({ loading: true })
     try {
       const { data } = await authApi.step2({
@@ -229,6 +232,7 @@ export const forgotApi = {
   verify:  (email, token)                   => api.post('/auth/verify-reset-token', { email, token }),
   reset:   (email, resetSessionToken, pwd)  => api.post('/auth/reset-password',     { email, resetSessionToken, newPassword: pwd }),
 }
+
 
 
 
