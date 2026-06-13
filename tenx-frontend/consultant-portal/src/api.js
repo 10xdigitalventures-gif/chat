@@ -137,3 +137,16 @@ export const consultantApi = {
   markNotificationRead: id => api.put(`/consultant/notifications/${id}/read`),
   markAllNotificationsRead: () => api.put('/consultant/notifications/read-all'),
 }
+
+export const notifApi = {
+  getAll: (unreadOnly = false, page = 1, pageSize = 30) =>
+    api.get('/consultant/notifications', {
+      params: { unreadOnly, page, pageSize },
+    }),
+
+  markRead: id => api.put(`/consultant/notifications/${id}/read`),
+
+  markAll: () => api.put('/consultant/notifications/read-all'),
+
+  delete: id => api.delete(`/consultant/notifications/${id}`),
+}
