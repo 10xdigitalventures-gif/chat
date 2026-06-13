@@ -26,11 +26,6 @@ export async function POST(req: Request) {
       0
     );
 
-    const description =
-      body.description ||
-      body.reason ||
-      'Admin gift credits';
-
     if (!userId) {
       return NextResponse.json(
         { success: false, message: 'userId is required' },
@@ -45,23 +40,10 @@ export async function POST(req: Request) {
       );
     }
 
-    const user = await prisma.appUser.findUnique({
-      where: { id: userId },
-    });
-
-    if (!user) {
-      return NextResponse.json(
-        { success: false, message: 'User not found' },
-        { status: 404 }
-      );
-    }
-
     const balance = await prisma.creditBalance.upsert({
       where: { userId },
       update: {
-        amount: {
-          increment: amount,
-        },
+        amount: { increment: amount },
       },
       create: {
         userId,
@@ -74,18 +56,18 @@ export async function POST(req: Request) {
         creditBalanceId: balance.id,
         amount,
         type: 'Credit',
-        description,
+        description: body.description || body.reason || 'Admin gift credits',
       },
+    });
+
+    const updated = await prisma.creditBalance.findUnique({
+      where: { userId },
     });
 
     return NextResponse.json({
       success: true,
       message: 'Credits granted successfully',
-      data: {
-        userId,
-        amount,
-        balance: balance.amount + amount,
-      },
+      data: updated,
     });
   } catch (error) {
     console.error('Grant credits error:', error);
