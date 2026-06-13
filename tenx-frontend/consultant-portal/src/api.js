@@ -1,6 +1,5 @@
 ﻿import axios from 'axios'
 
-// Use Vite proxy
 const BASE = (import.meta.env.VITE_API_URL || '/api').replace(/\/$/, '')
 
 const isAuthEndpoint = (url = '') => {
@@ -10,45 +9,70 @@ const isAuthEndpoint = (url = '') => {
     u.includes('/auth/register') ||
     u.includes('/auth/forgot-password') ||
     u.includes('/auth/verify-reset-token') ||
-    u.includes('/auth/reset-password') ||
-    u.includes('/auth/external-login')
+    u.includes('/auth/reset-password')
   )
 }
 
 export const api = axios.create({
-  baseURL: BASE
+  baseURL: BASE,
 })
 
-// â”€â”€ Attach JWT automatically â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 api.interceptors.request.use(cfg => {
   const token = localStorage.getItem('accessToken')
-  if (token) cfg.headers.Authorization = `Bearer ${token}`
+
+  if (token) {
+    cfg.headers = cfg.headers || {}
+    cfg.headers.Authorization = `Bearer ${token}`
+  }
+
   return cfg
 })
 
-// â”€â”€ Refresh token on 401 â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+let refreshPromise = null
+
 api.interceptors.response.use(
   r => r,
   async err => {
-    if (err.response?.status === 401 && !isAuthEndpoint(err.config?.url)) {
+    const original = err.config || {}
+
+    if (
+      err.response?.status === 401 &&
+      !original._retry &&
+      !isAuthEndpoint(original.url)
+    ) {
+      original._retry = true
+
       const rt = localStorage.getItem('refreshToken')
 
-      if (rt) {
-        try {
-          const { data } = await axios.post(`${BASE}/auth/refresh`, {
-            refreshToken: rt
-          })
+      if (!rt) {
+        localStorage.clear()
+        window.location.href = '/consultant/login'
+        return Promise.reject(err)
+      }
 
-          localStorage.setItem('accessToken', data.data.accessToken)
-          localStorage.setItem('refreshToken', data.data.refreshToken)
+      try {
+        refreshPromise =
+          refreshPromise ||
+          axios.post(`${BASE}/auth/refresh`, { refreshToken: rt })
 
-          err.config.headers.Authorization = `Bearer ${data.data.accessToken}`
+        const { data } = await refreshPromise
+        refreshPromise = null
 
-          return api(err.config)
-        } catch {
-          localStorage.clear()
-          window.location.href = '/consultant/login'
-        }
+        const newAccessToken = data.data.accessToken
+        const newRefreshToken = data.data.refreshToken || rt
+
+        localStorage.setItem('accessToken', newAccessToken)
+        localStorage.setItem('refreshToken', newRefreshToken)
+
+        original.headers = original.headers || {}
+        original.headers.Authorization = `Bearer ${newAccessToken}`
+
+        return api(original)
+      } catch (refreshError) {
+        refreshPromise = null
+        localStorage.clear()
+        window.location.href = '/consultant/login'
+        return Promise.reject(refreshError)
       }
     }
 
@@ -56,22 +80,13 @@ api.interceptors.response.use(
   }
 )
 
-
-// â”€â”€ AUTH â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 export const authApi = {
   step1: email => api.post('/auth/login/step1', { email }),
-  step2: body  => api.post('/auth/login/step2', body),
-  logout: rt   => api.post('/auth/logout', { refreshToken: rt }),
-  me: ()       => api.get('/auth/me'),
-
-  externalLogin: body => api.post('/auth/external-login', body),
-  getLinkedProviders: () => api.get('/auth/external-logins'),
-  linkProvider: body => api.post('/auth/external-logins/link', body),
-  unlinkProvider: prov => api.delete(`/auth/external-logins/${prov}`)
+  step2: body => api.post('/auth/login/step2', body),
+  logout: rt => api.post('/auth/logout', { refreshToken: rt }),
+  me: () => api.get('/auth/me'),
 }
 
-
-// â”€â”€ CONSULTANT â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 export const consultantApi = {
   getProfile: () => api.get('/consultant/profile'),
   updateProfile: body => api.put('/consultant/profile', body),
@@ -79,7 +94,7 @@ export const consultantApi = {
 
   getClients: (p, ps, s) =>
     api.get('/consultant/clients', {
-      params: { page: p, pageSize: ps, search: s }
+      params: { page: p, pageSize: ps, search: s },
     }),
 
   getRequests: () => api.get('/consultant/clients/requests'),
@@ -88,19 +103,17 @@ export const consultantApi = {
 
   getConversations: (p, ps) =>
     api.get('/consultant/messages', {
-      params: { page: p, pageSize: ps }
+      params: { page: p, pageSize: ps },
     }),
 
   getMessages: (id, p, ps) =>
     api.get(`/consultant/messages/${id}`, {
-      params: { page: p, pageSize: ps }
+      params: { page: p, pageSize: ps },
     }),
 
-  sendMessage: (id, body) =>
-    api.post(`/consultant/messages/${id}`, body),
+  sendMessage: (id, body) => api.post(`/consultant/messages/${id}`, body),
 
-  markRead: id =>
-    api.put(`/consultant/messages/${id}/read`),
+  markRead: id => api.put(`/consultant/messages/${id}/read`),
 
   getStats: () => api.get('/consultant/stats'),
 
@@ -108,30 +121,19 @@ export const consultantApi = {
     const fd = new FormData()
     fd.append('file', file)
     return api.post(`/consultant/messages/${id}/upload`, fd, {
-      headers: { 'Content-Type': 'multipart/form-data' }
+      headers: { 'Content-Type': 'multipart/form-data' },
     })
-  }
-}
+  },
 
+  getAvailability: () => api.get('/consultant/availability'),
+  saveAvailability: slots => api.put('/consultant/availability', slots),
+  clearAvailability: () => api.delete('/consultant/availability'),
 
-// â”€â”€ AVAILABILITY â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-export const availApi = {
-  get: () => api.get('/consultant/availability'),
-  save: slots => api.put('/consultant/availability', slots),
-  clear: () => api.delete('/consultant/availability')
-}
-
-
-// â”€â”€ NOTIFICATIONS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-export const notifApi = {
-  getAll: unreadOnly =>
+  getNotifications: (unreadOnly = false, page = 1, pageSize = 30) =>
     api.get('/consultant/notifications', {
-      params: { unreadOnly, page: 1, pageSize: 30 }
+      params: { unreadOnly, page, pageSize },
     }),
 
-  markRead: id =>
-    api.put(`/consultant/notifications/${id}/read`),
-
-  markAll: () =>
-    api.put('/consultant/notifications/read-all')
+  markNotificationRead: id => api.put(`/consultant/notifications/${id}/read`),
+  markAllNotificationsRead: () => api.put('/consultant/notifications/read-all'),
 }
