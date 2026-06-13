@@ -1,6 +1,6 @@
-﻿import { NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import { verifyAccessToken } from "@/lib/auth";
+import { jwtVerify } from "jose";
 
 function getCorsHeaders(request: NextRequest) {
   const allowedOrigins = (process.env.CORS_ORIGIN || "https://new.10xdigitalventures.com")
@@ -22,7 +22,31 @@ function getCorsHeaders(request: NextRequest) {
   };
 }
 
-export function middleware(request: NextRequest) {
+function getJwtSecret() {
+  const secret = process.env.JWT_SECRET || process.env.NEXTAUTH_SECRET || "";
+
+  if (!secret) {
+    throw new Error("JWT_SECRET or NEXTAUTH_SECRET is missing");
+  }
+
+  return new TextEncoder().encode(secret);
+}
+
+async function verifyToken(token: string) {
+  try {
+    const { payload } = await jwtVerify(token, getJwtSecret());
+
+    return {
+      userId: String(payload.userId || payload.sub || ""),
+      role: String(payload.role || ""),
+    };
+  } catch (error) {
+    console.error("JWT verify failed in middleware:", error);
+    return null;
+  }
+}
+
+export async function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
   const corsHeaders = getCorsHeaders(request);
 
@@ -65,9 +89,9 @@ export function middleware(request: NextRequest) {
   }
 
   const token = authHeader.split(" ")[1];
-  const payload = verifyAccessToken(token);
+  const payload = await verifyToken(token);
 
-  if (!payload) {
+  if (!payload || !payload.userId) {
     return NextResponse.json(
       { success: false, message: "Unauthorized" },
       { status: 401, headers: corsHeaders }
