@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect, useCallback, useRef } from 'react'
+import React, { useState, useEffect, useCallback, useRef } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { toast } from 'react-hot-toast'
 import { useAuthStore } from '../store/authStore'
@@ -11,9 +11,9 @@ import {
   Reply, Search, Filter, Clock, Star, Phone, Info, MoreVertical, Trash2
 } from 'lucide-react'
 
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// ═══════════════════════════════════════════════════════════════════════
 // LOGIN PAGE
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// ═══════════════════════════════════════════════════════════════════════
 export function LoginPage() {
   const navigate = useNavigate()
   const { login, loading } = useAuthStore()
@@ -66,7 +66,7 @@ export function LoginPage() {
 }
 
 // DASHBOARD
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// ═══════════════════════════════════════════════════════════════════════
 export function DashboardPage() {
   const { user } = useAuthStore()
   const [stats, setStats] = useState({ clients: 0, pending: 0, unread: 0 })
@@ -92,7 +92,7 @@ export function DashboardPage() {
   return (
     <>
       <div className="page-header">
-        <h2>Welcome, {user?.userName?.split(' ')[0]} ðŸ‘‹</h2>
+        <h2>Welcome, {user?.userName?.split(' ')[0]} 👋</h2>
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16, marginBottom: 20 }}>
@@ -120,9 +120,9 @@ export function DashboardPage() {
   )
 }
 
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// ═══════════════════════════════════════════════════════════════════════
 // PROFILE PAGE
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// ═══════════════════════════════════════════════════════════════════════
 export function ProfilePage() {
   const [profile, setProfile] = useState(null)
   const [saving, setSaving]   = useState(false)
@@ -222,8 +222,8 @@ export function ProfilePage() {
             </div>
             <p style={{ fontSize: 12, color: 'var(--muted)', marginBottom: 10 }}>{form.bio || 'Your bio will appear here...'}</p>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <span style={{ fontSize: 11, color: 'var(--accent)' }}>PKR {form.hourlyRate || 'â€”'}/hr</span>
-              <span style={{ fontSize: 11, padding: '3px 10px', borderRadius: 99, background: 'var(--accent)22', color: 'var(--accent)' }}>Connect â†—</span>
+              <span style={{ fontSize: 11, color: 'var(--accent)' }}>PKR {form.hourlyRate || '—'}/hr</span>
+              <span style={{ fontSize: 11, padding: '3px 10px', borderRadius: 99, background: 'var(--accent)22', color: 'var(--accent)' }}>Connect ↗</span>
             </div>
           </div>
         </div>
@@ -232,9 +232,9 @@ export function ProfilePage() {
   )
 }
 
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// ═══════════════════════════════════════════════════════════════════════
 // CLIENTS PAGE
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// ═══════════════════════════════════════════════════════════════════════
 export function ClientsPage() {
   const [clients, setClients] = useState([])
   const [total, setTotal]     = useState(0)
@@ -260,7 +260,7 @@ export function ClientsPage() {
 
       <div className="card">
         <div style={{ display: 'flex', gap: 8, marginBottom: 16, padding: '8px 12px', background: 'var(--bg3)', border: '1px solid var(--border)', borderRadius: 8 }}>
-          <input placeholder="Search clientsâ€¦" value={search} onChange={e => { setSearch(e.target.value); setPage(1) }}
+          <input placeholder="Search clients…" value={search} onChange={e => { setSearch(e.target.value); setPage(1) }}
             style={{ background: 'none', border: 'none', padding: 0, flex: 1 }} />
         </div>
 
@@ -296,9 +296,9 @@ export function ClientsPage() {
   )
 }
 
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// ═══════════════════════════════════════════════════════════════════════
 // REQUESTS PAGE
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// ═══════════════════════════════════════════════════════════════════════
 export function RequestsPage() {
   const [requests, setRequests] = useState([])
   const [loading, setLoading]   = useState(false)
@@ -329,7 +329,7 @@ export function RequestsPage() {
       </div>
 
       <div className="card">
-        {loading && <p style={{ color: 'var(--muted)', textAlign: 'center', padding: 40 }}>Loadingâ€¦</p>}
+        {loading && <p style={{ color: 'var(--muted)', textAlign: 'center', padding: 40 }}>Loading…</p>}
         {!loading && requests.length === 0 && (
           <div style={{ textAlign: 'center', padding: 60, color: 'var(--muted)' }}>
             <Bell size={40} style={{ margin: '0 auto 12px', opacity: 0.3 }} />
@@ -364,16 +364,16 @@ export function RequestsPage() {
   )
 }
 
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// ═══════════════════════════════════════════════════════════════════════
 // MESSAGING PAGE (CRM STYLE)
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// ═══════════════════════════════════════════════════════════════════════
 export function MessagingPage() {
   const { id: paramConvId } = useParams()
   const navigate = useNavigate()
   const { user, accessToken } = useAuthStore()
   
   const [conversations, setConversations] = useState([])
-  const [activeConv, setActiveConv]       = useState(paramConvId || null)
+  const [activeConv, setActiveConv] = useState(paramConvId && paramConvId !== 'undefined' ? paramConvId : null)
   const [messages, setMessages]           = useState([])
   const [text, setText]                   = useState('')
   const [isTyping, setIsTyping]           = useState(false)
@@ -389,7 +389,7 @@ export function MessagingPage() {
 
   const activeConvData = conversations.find(c => c.conversationId === activeConv)
 
-  // â”€â”€ Data Loading â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── Data Loading ──────────────────────────────────────────────────────
   const loadConversations = useCallback(async () => {
     try {
       const { data } = await consultantApi.getConversations(1, 100)
@@ -398,7 +398,7 @@ export function MessagingPage() {
   }, [])
 
   const loadMessages = useCallback(async (convId) => {
-    if (!convId) return
+    if (!convId || convId === 'undefined') return
     try {
       const { data } = await consultantApi.getMessages(convId, 1, 100)
       setMessages((data.data?.items || []).reverse())
@@ -414,12 +414,13 @@ export function MessagingPage() {
   }, [activeConv, loadMessages])
 
   useEffect(() => {
+    if (paramConvId === 'undefined') { navigate('/messages', { replace: true }); setActiveConv(null); return }
     if (paramConvId && paramConvId !== activeConv) setActiveConv(paramConvId)
   }, [paramConvId])
 
   useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: 'smooth' }) }, [messages])
 
-  // â”€â”€ Socket.io â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── Socket.io ─────────────────────────────────────────────────────────
   useEffect(() => {
     if (!accessToken) return
     const chat = createChatConnection(accessToken)
@@ -441,7 +442,7 @@ export function MessagingPage() {
     return () => { chat.disconnect() }
   }, [accessToken, activeConv, loadConversations])
 
-  // â”€â”€ Handlers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── Handlers ──────────────────────────────────────────────────────────
   const handleSend = async () => {
     if (!activeConv || (!text.trim() && !pendingFile) || sending) return
     setSending(true)
@@ -601,9 +602,9 @@ export function MessagingPage() {
   )
 }
 
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─────────────────────────────────────────────────────────
 // EXPORT ALL PAGES
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─────────────────────────────────────────────────────────
 
 export const AllPages = {
   LoginPage,
@@ -613,6 +614,7 @@ export const AllPages = {
   RequestsPage,
   MessagingPage
 }
+
 
 
 
