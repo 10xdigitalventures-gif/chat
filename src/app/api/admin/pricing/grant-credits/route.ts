@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server';
+﻿import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 
 export const dynamic = 'force-dynamic';
@@ -67,7 +67,14 @@ export async function POST(req: Request) {
     return NextResponse.json({
       success: true,
       message: 'Credits granted successfully',
-      data: updated,
+      data: {
+        ...updated,
+        textCharsRemaining: Math.floor(updated?.amount || 0),
+        audioMinsRemaining: 0,
+        videoMinsRemaining: 0,
+        imageCreditsRemaining: 0,
+        fileCreditsRemaining: 0,
+      },
     });
   } catch (error) {
     console.error('Grant credits error:', error);
