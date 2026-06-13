@@ -1,4 +1,4 @@
-import axios from 'axios'
+﻿import axios from 'axios'
 import { create } from 'zustand'
 
 const BASE = (import.meta.env.VITE_API_URL || '/api').replace(/\/$/, '')
@@ -37,7 +37,7 @@ api.interceptors.response.use(r => r, async err => {
   return Promise.reject(err)
 })
 
-// ── API CALLS ─────────────────────────────────────────────────────────────────
+// â”€â”€ API CALLS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 export const authApi = {
   register: body => api.post('/auth/register', body),
   step1:  email => api.post('/auth/login/step1', { email }),
@@ -49,7 +49,7 @@ export const authApi = {
   unlinkProvider:  prov => api.delete(`/auth/external-logins/${prov}`),
 }
 
-// ── CREDITS (chars + minutes balance) ─────────────────────────────────────
+// â”€â”€ CREDITS (chars + minutes balance) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 export const creditsApi = {
   getBalance:           ()           => api.get('/credits/balance'),
   getHistory:           (p, ps)      => api.get('/credits/history', { params: { page: p, pageSize: ps } }),
@@ -61,13 +61,13 @@ export const creditsApi = {
   verify:               paymentId    => api.get(`/credits/verify/${paymentId}`),
 }
 
-// ── INVOICES ──────────────────────────────────────────────────────────────
+// â”€â”€ INVOICES â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 export const invoiceApi = {
   list:     (p, ps)    => api.get('/invoices', { params: { page: p, pageSize: ps } }),
-  download: id         => `${BASE}/invoices/${id}/download`,  // returns URL — open in new tab
+  download: id         => `${BASE}/invoices/${id}/download`,  // returns URL â€” open in new tab
 }
 export const userApi = {
-    // Public — no auth needed
+    // Public â€” no auth needed
     getConsultants: (p, ps, s) =>
         api.get('/user/consultants', { params: { page: p, pageSize: ps, search: s } }),
 
@@ -81,7 +81,7 @@ export const userApi = {
     connect: consultantId =>
         api.post(`/user/consultants/${consultantId}/connect`),
 
-    // NEW — instant chat start
+    // NEW â€” instant chat start
     startChat: consultantUserId => api.post('/user/messages/start', { consultantUserId }),
 
     getProfile: () =>
@@ -110,7 +110,7 @@ export const userApi = {
   }
 }
 
-// ── AUTH STORE ────────────────────────────────────────────────────────────────
+// â”€â”€ AUTH STORE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 export const useAuthStore = create((set, get) => ({
   user: JSON.parse(localStorage.getItem('user') || 'null'),
   accessToken: localStorage.getItem('accessToken') || null,
@@ -210,7 +210,7 @@ export const notifApi = {
   markAll:  ()           => api.put('/user/notifications/read-all'),
 }
 
-// ── REVIEWS ───────────────────────────────────────────────────────────────────
+// â”€â”€ REVIEWS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 export const reviewApi = {
   getAll:  (consultantId, p, ps) => api.get(`/user/consultants/${consultantId}/reviews`, { params:{page:p,pageSize:ps} }),
   create:  (consultantId, body)  => api.post(`/user/consultants/${consultantId}/reviews`, body),
@@ -218,17 +218,18 @@ export const reviewApi = {
   delete:  (consultantId, id)    => api.delete(`/user/consultants/${consultantId}/reviews/${id}`),
 }
 
-// ── PUBLIC AVAILABILITY ───────────────────────────────────────────────────────
+// â”€â”€ PUBLIC AVAILABILITY â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 export const availApi = {
   get: (consultantUserId) => api.get(`/user/consultants/${consultantUserId}/availability`),
 }
 
-// ── FORGOT PASSWORD ───────────────────────────────────────────────────────────
+// â”€â”€ FORGOT PASSWORD â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 export const forgotApi = {
   request: (email)                          => api.post('/auth/forgot-password',    { email }),
   verify:  (email, token)                   => api.post('/auth/verify-reset-token', { email, token }),
   reset:   (email, resetSessionToken, pwd)  => api.post('/auth/reset-password',     { email, resetSessionToken, newPassword: pwd }),
 }
+
 
 
 
