@@ -3,7 +3,7 @@ const fs = require('fs')
 
 const API_URL =
   process.env.VITE_API_URL ||
-  'https://chat-api.10xdigitalventures.com/api'
+  'https://chatnew.10xdigitalventures.com/api'
 
 function run(command, args, env = {}) {
   console.log(`\n> ${command} ${args.join(' ')}`)
@@ -46,3 +46,4 @@ buildPortal('tenx-frontend/user-portal', '/')
 
 console.log('\n✅ Frontend build complete')
 console.log(`API URL: ${API_URL}`)
+
