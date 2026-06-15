@@ -5,10 +5,10 @@ import { jwtVerify } from "jose";
 function getCorsHeaders(request: NextRequest) {
   const allowedOrigins = (process.env.CORS_ORIGIN || "https://new.10xdigitalventures.com")
     .split(",")
-    .map(x => x.trim().replace(/\/$/, ''))
+    .map(x => x.trim())
     .filter(Boolean);
 
-  const origin = (request.headers.get("origin") || "").replace(/\/$/, "");
+  const origin = (request.headers.get("origin") || "";
   const allowOrigin = allowedOrigins.includes(origin)
     ? origin
     : allowedOrigins[0] || "*";
