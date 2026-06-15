@@ -1,14 +1,14 @@
-import { NextResponse } from "next/server";
+﻿import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { jwtVerify } from "jose";
 
 function getCorsHeaders(request: NextRequest) {
   const allowedOrigins = (process.env.CORS_ORIGIN || "https://new.10xdigitalventures.com")
     .split(",")
-    .map(x => x.trim())
+    .map(x => x.trim().replace(/\/$/, ''))
     .filter(Boolean);
 
-  const origin = request.headers.get("origin") || "";
+  const origin = (request.headers.get("origin") || "").replace(/\/$/, "");
   const allowOrigin = allowedOrigins.includes(origin)
     ? origin
     : allowedOrigins[0] || "*";
