@@ -1,0 +1,242 @@
+﻿import axios from 'axios'
+import { create } from 'zustand'
+
+const BASE = (import.meta.env.VITE_API_URL || '/api').replace(/\/$/, '')
+const isAuthEndpoint = (url = '') => {
+  const u = String(url)
+  return (
+    u.includes('/auth/login') ||
+    u.includes('/auth/register') ||
+    u.includes('/auth/forgot-password') ||
+    u.includes('/auth/verify-reset-token') ||
+    u.includes('/auth/reset-password') ||
+    u.includes('/auth/external-login')
+  )
+}
+
+export const api = axios.create({ baseURL: BASE })
+
+api.interceptors.request.use(cfg => {
+  const t = localStorage.getItem('accessToken')
+  if (t) cfg.headers.Authorization = `Bearer ${t}`
+  return cfg
+})
+api.interceptors.response.use(r => r, async err => {
+  if (err.response?.status === 401 && !isAuthEndpoint(err.config?.url)) {
+    const rt = localStorage.getItem('refreshToken')
+    if (rt) {
+      try {
+        const { data } = await axios.post(`${BASE}/auth/refresh`, { refreshToken: rt })
+        localStorage.setItem('accessToken', data.data.accessToken)
+        localStorage.setItem('refreshToken', data.data.refreshToken)
+        err.config.headers.Authorization = `Bearer ${data.data.accessToken}`
+        return api(err.config)
+      } catch { localStorage.clear(); window.location.href = '/login' }
+    }
+  }
+  return Promise.reject(err)
+})
+
+// â”€â”€ API CALLS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+export const authApi = {
+  register: body => api.post('/auth/register', body),
+  step1:  email => api.post('/auth/login/step1', { email }),
+  step2:  body  => api.post('/auth/login/step2', body),
+  logout: rt    => api.post('/auth/logout', { refreshToken: rt }),
+  externalLogin:   body => api.post('/auth/external-login', body),
+  getLinkedProviders: () => api.get('/auth/external-logins'),
+  linkProvider:    body => api.post('/auth/external-logins/link', body),
+  unlinkProvider:  prov => api.delete(`/auth/external-logins/${prov}`),
+}
+
+// â”€â”€ CREDITS (chars + minutes balance) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+export const creditsApi = {
+  getBalance:           ()           => api.get('/credits/balance'),
+  getHistory:           (p, ps)      => api.get('/credits/history', { params: { page: p, pageSize: ps } }),
+  getPricing:           ()           => api.get('/credits/pricing'),
+  purchase:             body         => api.post('/credits/purchase', body),
+  purchasePayFast:      body         => api.post('/credits/purchase/payfast', body),
+  purchaseEasyPaisa:    body         => api.post('/credits/purchase/easypaisa', body),
+  purchaseEasyPaisaOtc: body         => api.post('/credits/purchase/easypaisa/otc', body),
+  verify:               paymentId    => api.get(`/credits/verify/${paymentId}`),
+}
+
+// â”€â”€ INVOICES â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+export const invoiceApi = {
+  list:     (p, ps)    => api.get('/invoices', { params: { page: p, pageSize: ps } }),
+  download: id         => `${BASE}/invoices/${id}/download`,  // returns URL â€” open in new tab
+}
+export const userApi = {
+    // Public â€” no auth needed
+    getConsultants: (p, ps, s) =>
+        api.get('/user/consultants', { params: { page: p, pageSize: ps, search: s } }),
+
+    getConsultant: id =>
+        api.get(`/user/consultants/${id}`),
+
+    getConsultantBySlug: slug =>
+        api.get(`/user/consultants/by-slug/${slug}`),
+
+    // Auth required
+    connect: consultantId =>
+        api.post(`/user/consultants/${consultantId}/connect`),
+
+    // NEW â€” instant chat start
+    startChat: consultantUserId => api.post('/user/messages/start', { consultantUserId }),
+
+    getProfile: () =>
+        api.get('/user/profile'),
+
+    updateProfile: body =>
+        api.put('/user/profile', body),
+
+    getConversations: (p, ps) =>
+        api.get('/user/messages', { params: { page: p, pageSize: ps } }),
+
+    getMessages: (id, p, ps) =>
+        api.get(`/user/messages/${id}`, { params: { page: p, pageSize: ps } }),
+
+    sendMessage: (id, body) =>
+        api.post(`/user/messages/${id}`, body),
+
+    markAsRead: id => api.put(`/user/messages/${id}/read`),
+
+  uploadChatAttachment: (convId, file) => {
+    const fd = new FormData()
+    fd.append('file', file)
+    return api.post(`/user/messages/${convId}/upload`, fd, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    })
+  }
+}
+
+// â”€â”€ AUTH STORE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+export const useAuthStore = create((set, get) => ({
+  user: JSON.parse(localStorage.getItem('user') || 'null'),
+  accessToken: localStorage.getItem('accessToken') || null,
+  refreshToken: localStorage.getItem('refreshToken') || null,
+  loading: false,
+  step1Data: null,
+
+  login: async (email, password) => {
+    localStorage.removeItem('accessToken')
+    localStorage.removeItem('refreshToken')
+    localStorage.removeItem('user')
+    set({ loading: true })
+    try {
+      const { data } = await authApi.step2({
+        email,
+        password,
+        rememberMe: true,
+      })
+
+      const payload = data.data
+      const { accessToken, refreshToken, user } = payload
+
+      localStorage.setItem('accessToken', accessToken)
+      localStorage.setItem('refreshToken', refreshToken)
+      localStorage.setItem('user', JSON.stringify(user))
+
+      set({
+        accessToken,
+        refreshToken,
+        user,
+        loading: false,
+      })
+
+      return user
+    } catch (e) {
+      set({ loading: false })
+      throw new Error(e.response?.data?.message || 'Login failed')
+    }
+  },
+
+  // Compatibility only
+  step1: async (email) => {
+    set({ loading: true })
+    try {
+      const { data } = await authApi.step1(email)
+      set({ step1Data: data.data, loading: false })
+      return data.data
+    } catch (e) {
+      set({ loading: false })
+      throw new Error(e.response?.data?.message || 'Email not found')
+    }
+  },
+
+  // Compatibility only
+  step2: async (body) => {
+    set({ loading: true })
+    try {
+      const { data } = await authApi.step2(body)
+      const payload = data.data
+      const { accessToken, refreshToken, user } = payload
+
+      localStorage.setItem('accessToken', accessToken)
+      localStorage.setItem('refreshToken', refreshToken)
+      localStorage.setItem('user', JSON.stringify(user))
+
+      set({
+        accessToken,
+        refreshToken,
+        user,
+        loading: false,
+      })
+
+      return user
+    } catch (e) {
+      set({ loading: false })
+      throw new Error(e.response?.data?.message || 'Login failed')
+    }
+  },
+
+  logout: async () => {
+    try {
+      await authApi.logout(get().refreshToken)
+    } catch {}
+
+    localStorage.clear()
+
+    set({
+      user: null,
+      accessToken: null,
+      refreshToken: null,
+    })
+  },
+
+  isLoggedIn: () => !!get().accessToken,
+}))
+
+export const notifApi = {
+  getAll:   (unreadOnly) => api.get('/user/notifications', { params: { unreadOnly, page:1, pageSize:30 } }),
+  markRead: id           => api.put(`/user/notifications/${id}/read`),
+  markAll:  ()           => api.put('/user/notifications/read-all'),
+}
+
+// â”€â”€ REVIEWS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+export const reviewApi = {
+  getAll:  (consultantId, p, ps) => api.get(`/user/consultants/${consultantId}/reviews`, { params:{page:p,pageSize:ps} }),
+  create:  (consultantId, body)  => api.post(`/user/consultants/${consultantId}/reviews`, body),
+  update:  (consultantId, id, b) => api.put(`/user/consultants/${consultantId}/reviews/${id}`, b),
+  delete:  (consultantId, id)    => api.delete(`/user/consultants/${consultantId}/reviews/${id}`),
+}
+
+// â”€â”€ PUBLIC AVAILABILITY â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+export const availApi = {
+  get: (consultantUserId) => api.get(`/user/consultants/${consultantUserId}/availability`),
+}
+
+// â”€â”€ FORGOT PASSWORD â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+export const forgotApi = {
+  request: (email)                          => api.post('/auth/forgot-password',    { email }),
+  verify:  (email, token)                   => api.post('/auth/verify-reset-token', { email, token }),
+  reset:   (email, resetSessionToken, pwd)  => api.post('/auth/reset-password',     { email, resetSessionToken, newPassword: pwd }),
+}
+
+
+
+
+
+
+
+
