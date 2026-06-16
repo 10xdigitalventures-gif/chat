@@ -3,10 +3,11 @@
 const nextConfig: NextConfig = {
   skipTrailingSlashRedirect: true,
   skipMiddlewareUrlNormalize: true,
-  outputFileTracingRoot: process.cwd(),
+
   eslint: {
     ignoreDuringBuilds: true,
   },
+
   typescript: {
     ignoreBuildErrors: true,
   },

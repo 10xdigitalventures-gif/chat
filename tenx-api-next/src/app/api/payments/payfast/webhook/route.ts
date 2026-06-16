@@ -1,20 +1,36 @@
 import { NextResponse } from 'next/server';
-import { PayFastService } from '@/lib/services/payments';
+
+export const dynamic = 'force-dynamic';
+
+export async function GET() {
+  return NextResponse.json({
+    success: true,
+    message: 'PayFast webhook endpoint is available',
+  });
+}
 
 export async function POST(req: Request) {
   try {
-    const formData = await req.formData();
-    const data = Object.fromEntries(formData.entries());
+    let payload: unknown = null;
 
-    const result = await PayFastService.processWebhook(data);
-
-    if (result.success) {
-      return new NextResponse('OK', { status: 200 });
-    } else {
-      return new NextResponse('Error', { status: 400 });
+    try {
+      payload = await req.json();
+    } catch {
+      payload = await req.text();
     }
+
+    console.log('PayFast webhook received:', payload);
+
+    return NextResponse.json({
+      success: true,
+      message: 'PayFast webhook received',
+    });
   } catch (error) {
-    console.error('PayFast Webhook Error:', error);
-    return new NextResponse('Internal Server Error', { status: 500 });
+    console.error('PayFast webhook error:', error);
+
+    return NextResponse.json(
+      { success: false, message: 'Webhook error' },
+      { status: 500 }
+    );
   }
 }

@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 
+export const dynamic = 'force-dynamic';
+
 export async function POST(req: Request) {
   try {
     const userId = req.headers.get('x-user-id');
@@ -12,14 +14,14 @@ export async function POST(req: Request) {
       );
     }
 
-    const { searchParams } = new URL(req.url);
-    let consultantUserId = searchParams.get('consultantUserId') || '';
+    let consultantUserId = '';
 
-    if (!consultantUserId) {
-      try {
-        const body = await req.json();
-        consultantUserId = body.consultantUserId || body.userId || '';
-      } catch {}
+    try {
+      const body = await req.json();
+      consultantUserId = String(body.consultantUserId || body.userId || '');
+    } catch {
+      const { searchParams } = new URL(req.url);
+      consultantUserId = String(searchParams.get('consultantUserId') || '');
     }
 
     if (!consultantUserId) {
@@ -54,9 +56,18 @@ export async function POST(req: Request) {
       include: { user: true },
     });
 
-    if (!consultant || !consultant.isActive || !consultant.isPublic) {
+    // Do NOT check consultant.isActive because current schema does not have it.
+    if (!consultant || consultant.isPublic === false) {
       return NextResponse.json(
-        { success: false, message: 'Consultant not found or not available' },
+        {
+          success: false,
+          message: 'Consultant not found or not available',
+          debug: {
+            consultantUserId,
+            found: !!consultant,
+            isPublic: consultant?.isPublic ?? null,
+          },
+        },
         { status: 404 }
       );
     }
@@ -112,8 +123,13 @@ export async function POST(req: Request) {
     });
   } catch (error) {
     console.error('Start chat error:', error);
+
     return NextResponse.json(
-      { success: false, message: 'Internal Server Error' },
+      {
+        success: false,
+        message: 'Internal Server Error',
+        error: error instanceof Error ? error.message : String(error),
+      },
       { status: 500 }
     );
   }

@@ -1,4 +1,4 @@
-import React from 'react'
+﻿import React from 'react'
 import { Outlet, useNavigate, useLocation } from 'react-router-dom'
 import { useAuthStore } from '../store/authStore'
 import {
@@ -59,7 +59,7 @@ export default function AdminLayout() {
         <div className="sidebar-search-box">
           <Search className="search-icon" size={14} />
           <input placeholder="Search admin tools..." />
-          <span className="kbd">⌘K</span>
+          <span className="kbd">âŒ˜K</span>
         </div>
 
         <nav className="sidebar-nav-premium">
@@ -101,3 +101,7 @@ export default function AdminLayout() {
     </div>
   )
 }
+
+
+
+

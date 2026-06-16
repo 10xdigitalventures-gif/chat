@@ -10,7 +10,12 @@ export const useAuthStore = create((set, get) => ({
   step1Data: null,
 
   login: async (email, password) => {
+    localStorage.removeItem('accessToken')
+    localStorage.removeItem('refreshToken')
+    localStorage.removeItem('user')
+
     set({ loading: true, error: null })
+
     try {
       const { data } = await authApi.step2({
         email,
@@ -40,7 +45,6 @@ export const useAuthStore = create((set, get) => ({
     }
   },
 
-  // compatibility only
   step1: async (email) => {
     set({ loading: true, error: null })
     try {
@@ -54,7 +58,6 @@ export const useAuthStore = create((set, get) => ({
     }
   },
 
-  // compatibility only
   step2: async (body) => {
     set({ loading: true, error: null })
     try {

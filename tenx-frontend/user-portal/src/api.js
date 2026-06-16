@@ -45,7 +45,7 @@ api.interceptors.response.use(
   },
 );
 
-// ── API CALLS ─────────────────────────────────────────────────────────────────
+// â”€â”€ API CALLS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 export const authApi = {
   register: (body) => api.post("/auth/register", body),
   step1: (email) => api.post("/auth/login/step1", { email }),
@@ -57,7 +57,7 @@ export const authApi = {
   unlinkProvider: (prov) => api.delete(`/auth/external-logins/${prov}`),
 };
 
-// ── CREDITS (chars + minutes balance) ─────────────────────────────────────
+// â”€â”€ CREDITS (chars + minutes balance) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 export const creditsApi = {
   getBalance: () => api.get("/credits/balance"),
   getHistory: (p, ps) =>
@@ -71,7 +71,7 @@ export const creditsApi = {
   verify: (paymentId) => api.get(`/credits/verify/${paymentId}`),
 };
 
-// ── INVOICES ──────────────────────────────────────────────────────────────
+// â”€â”€ INVOICES â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 export const invoiceApi = {
   list: (p, ps) => api.get("/invoices", { params: { page: p, pageSize: ps } }),
   download: (id) => `${BASE}/invoices/${id}/download`, // returns URL â€” open in new tab
@@ -93,7 +93,7 @@ export const userApi = {
 
   // NEW â€” instant chat start
   startChat: (consultantUserId) =>
-    api.post(`/user/messages/start/${consultantUserId}`),
+    api.post("/user/messages/start", { consultantUserId }),
 
   getProfile: () => api.get("/user/profile"),
 
@@ -118,7 +118,7 @@ export const userApi = {
   },
 };
 
-// ── AUTH STORE ────────────────────────────────────────────────────────────────
+// â”€â”€ AUTH STORE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 export const useAuthStore = create((set, get) => ({
   user: JSON.parse(localStorage.getItem("user") || "null"),
   accessToken: localStorage.getItem("accessToken") || null,
@@ -127,6 +127,9 @@ export const useAuthStore = create((set, get) => ({
   step1Data: null,
 
   login: async (email, password) => {
+    localStorage.removeItem("accessToken");
+    localStorage.removeItem("refreshToken");
+    localStorage.removeItem("user");
     set({ loading: true });
     try {
       const { data } = await authApi.step2({
@@ -206,7 +209,7 @@ export const notifApi = {
   markAll: () => api.put("/user/notifications/read-all"),
 };
 
-// ── REVIEWS ───────────────────────────────────────────────────────────────────
+// â”€â”€ REVIEWS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 export const reviewApi = {
   getAll: (consultantId, p, ps) =>
     api.get(`/user/consultants/${consultantId}/reviews`, {
@@ -220,13 +223,13 @@ export const reviewApi = {
     api.delete(`/user/consultants/${consultantId}/reviews/${id}`),
 };
 
-// ── PUBLIC AVAILABILITY ───────────────────────────────────────────────────────
+// â”€â”€ PUBLIC AVAILABILITY â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 export const availApi = {
   get: (consultantUserId) =>
     api.get(`/user/consultants/${consultantUserId}/availability`),
 };
 
-// ── FORGOT PASSWORD ───────────────────────────────────────────────────────────
+// â”€â”€ FORGOT PASSWORD â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 export const forgotApi = {
   request: (email) => api.post("/auth/forgot-password", { email }),
   verify: (email, token) =>

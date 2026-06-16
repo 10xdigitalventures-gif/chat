@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react'
+﻿import React, { useState, useEffect } from 'react'
 import { toast } from 'react-hot-toast'
 import { Star, Trash2, X, Filter } from 'lucide-react'
-import { reviewAdminApi } from '../api'
+import { reviewApi as reviewAdminApi } from '../api'
 
 function Modal({ open, title, onClose, children, footer }) {
   if (!open) return null
@@ -52,7 +52,7 @@ export default function ReviewsPage() {
     catch { toast.error('Delete failed') }
   }
 
-  const fmtDate = d => d ? new Date(d).toLocaleDateString('en-GB', { day:'2-digit', month:'short', year:'numeric' }) : '—'
+  const fmtDate = d => d ? new Date(d).toLocaleDateString('en-GB', { day:'2-digit', month:'short', year:'numeric' }) : 'â€”'
 
   // Rating distribution from current page
   const dist = [5,4,3,2,1].map(s => ({ stars:s, count: items.filter(i => i.rating===s).length }))
@@ -71,13 +71,13 @@ export default function ReviewsPage() {
         <select className="input" style={{ maxWidth:100, fontSize:12 }} value={minRating}
           onChange={e => { setMin(e.target.value); setPage(1) }}>
           <option value="">Min</option>
-          {[1,2,3,4,5].map(s => <option key={s} value={s}>{s}★</option>)}
+          {[1,2,3,4,5].map(s => <option key={s} value={s}>{s}â˜…</option>)}
         </select>
-        <span style={{ color:'var(--muted)' }}>–</span>
+        <span style={{ color:'var(--muted)' }}>â€“</span>
         <select className="input" style={{ maxWidth:100, fontSize:12 }} value={maxRating}
           onChange={e => { setMax(e.target.value); setPage(1) }}>
           <option value="">Max</option>
-          {[1,2,3,4,5].map(s => <option key={s} value={s}>{s}★</option>)}
+          {[1,2,3,4,5].map(s => <option key={s} value={s}>{s}â˜…</option>)}
         </select>
         {(minRating||maxRating) && (
           <button className="btn btn-ghost" style={{ fontSize:12 }} onClick={() => { setMin(''); setMax(''); setPage(1) }}>
@@ -87,7 +87,7 @@ export default function ReviewsPage() {
       </div>
 
       {loading ? (
-        <div style={{ padding:40, textAlign:'center', color:'var(--muted)' }}>Loading…</div>
+        <div style={{ padding:40, textAlign:'center', color:'var(--muted)' }}>Loadingâ€¦</div>
       ) : (
         <div className="card">
           <table className="table">
@@ -147,3 +147,4 @@ export default function ReviewsPage() {
     </>
   )
 }
+

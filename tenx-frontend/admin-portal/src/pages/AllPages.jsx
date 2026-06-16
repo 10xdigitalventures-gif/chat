@@ -5,7 +5,7 @@
 import React, { useState, useEffect, useCallback } from 'react'
 import { toast } from 'react-hot-toast'
 import { Search, Plus, Pencil, Trash2, X, RefreshCw, Eye, Users, Shield, MapPin, AlertTriangle, Settings, Gift } from 'lucide-react'
-import { userApi, roleApi, locationApi, settingsApi, errorLogApi, dataApi, consultantConfigApi, creditsApi } from '../api'
+import { userApi, roleApi, settingsApi, errorLogApi, dataApi, consultantConfigApi, creditsApi } from '../api'
 
 // â”€â”€ REUSABLE COMPONENTS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
@@ -51,26 +51,22 @@ function ConfirmDelete({ open, name, onConfirm, onClose }) {
 
 // â”€â”€ DASHBOARD â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 export function DashboardPage() {
-  const [stats, setStats] = useState({ users: 0, roles: 0, locations: 0, errors: 0 })
+  const [stats, setStats] = useState({ users: 0, roles: 0, errors: 0 })
 
   useEffect(() => {
     Promise.all([
       userApi.getAll(1, 1, ''),
       roleApi.getAll(1, 1, ''),
-      locationApi.getAll(1, 1, ''),
       errorLogApi.getAll(1, 1, ''),
-    ]).then(([u, r, l, e]) => setStats({
+    ]).then(([u, r, e]) => setStats({
       users:     u.data.data.totalRecords,
-      roles:     r.data.data.totalRecords,
-      locations: l.data.data.totalRecords,
-      errors:    e.data.data.totalRecords,
+      roles:     r.data.data.totalRecords,errors:    e.data.data.totalRecords,
     })).catch(() => {})
   }, [])
 
   const cards = [
     { label: 'Total Users',     val: stats.users,     icon: Users,        color: 'var(--accent)' },
     { label: 'Roles',           val: stats.roles,     icon: Shield,       color: 'var(--green)' },
-    { label: 'Locations',       val: stats.locations, icon: MapPin,       color: '#f7c948' },
     { label: 'Error Logs',      val: stats.errors,    icon: AlertTriangle,color: 'var(--accent2)' },
   ]
 
@@ -165,7 +161,7 @@ export function UsersPage() {
 
   const isClientRole = (roleName) => {
     const r = (roleName || '').toLowerCase()
-    return r.includes('client') || r.includes('web')
+    return r.includes('client') || r.includes('web') || r.includes('user') || r.includes('user')
   }
 
   // â”€â”€ Grant Credits State â”€â”€
@@ -762,7 +758,6 @@ export function DataConstantsPage() {
     clientAreas:   { api: dataApi.clientAreas,   label: 'Client Areas',   fields: [['ControlAreaName', 'Name'], ['ControlAreaPrefix', 'Prefix']] },
     currencies:    { api: dataApi.currencies,    label: 'Currencies',     fields: [['CountryName', 'Country'], ['CurrencyName', 'Currency'], ['Symbol', 'Symbol']] },
     countries:     { api: dataApi.countries,     label: 'Countries',      fields: [['Name', 'Country Name'], ['Code', 'Code'], ['Prefix', 'Prefix']] },
-    locationTypes: { api: dataApi.locationTypes, label: 'Location Types', fields: [['Name', 'Name'], ['ShortName', 'Short Name']] },
   }
 
   const cfg = configs[tab]
@@ -835,4 +830,7 @@ export function DataConstantsPage() {
     </>
   )
 }
+
+
+
 

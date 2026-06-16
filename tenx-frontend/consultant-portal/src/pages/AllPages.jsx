@@ -373,7 +373,7 @@ export function MessagingPage() {
   const { user, accessToken } = useAuthStore()
   
   const [conversations, setConversations] = useState([])
-  const [activeConv, setActiveConv]       = useState(paramConvId || null)
+  const [activeConv, setActiveConv] = useState(paramConvId && paramConvId !== 'undefined' ? paramConvId : null)
   const [messages, setMessages]           = useState([])
   const [text, setText]                   = useState('')
   const [isTyping, setIsTyping]           = useState(false)
@@ -398,7 +398,7 @@ export function MessagingPage() {
   }, [])
 
   const loadMessages = useCallback(async (convId) => {
-    if (!convId) return
+    if (!convId || convId === 'undefined') return
     try {
       const { data } = await consultantApi.getMessages(convId, 1, 100)
       setMessages((data.data?.items || []).reverse())
@@ -414,6 +414,8 @@ export function MessagingPage() {
   }, [activeConv, loadMessages])
 
   useEffect(() => {
+    if (paramConvId === 'undefined') { navigate('/messages', { replace: true }); setActiveConv(null); return }
+    if (paramConvId === 'undefined') { navigate('/messages', { replace: true }); setActiveConv(null); return }
     if (paramConvId && paramConvId !== activeConv) setActiveConv(paramConvId)
   }, [paramConvId])
 
@@ -613,6 +615,8 @@ export const AllPages = {
   RequestsPage,
   MessagingPage
 }
+
+
 
 
 
