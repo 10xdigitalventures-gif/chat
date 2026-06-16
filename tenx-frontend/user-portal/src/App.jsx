@@ -428,7 +428,7 @@ function HomePage() {
                       {connecting === c.userId ? (
                         <Loader size={11} className="spin" />
                       ) : (
-                        "Consult Now â†—"
+                        "Consult Now"
                       )}
                     </button>
                   )}
@@ -828,17 +828,18 @@ function MessagesPage() {
   const [pendingFile, setPendingFile] = useState(null);
   const [replyTo, setReplyTo] = useState(null);
   const [credits, setCredits] = useState(null);
-  const [filter, setFilter] = useState("all"); // all, unread, recent
+  const [filter, setFilter] = useState("all");
+  const [canCall, setCanCall] = useState({ voice: false, video: false });
 
   const connRef = useRef(null);
   const bottomRef = useRef(null);
-  const mediaRecorder = useRef(null);
-  const chunks = useRef([]);
   const activeIdRef = useRef(activeId);
+
   useEffect(() => {
     activeIdRef.current = activeId;
   }, [activeId]);
 
+  // ── Data loaders ────────────────────────────────────────────────────────────
   const loadConvs = useCallback(async () => {
     try {
       const { data } = await userApi.getConversations(1, 100);
@@ -858,8 +859,15 @@ function MessagesPage() {
     loadCredits();
   }, [loadConvs, loadCredits]);
 
+  // ── Load messages when activeId changes ─────────────────────────────────────
   useEffect(() => {
     if (!activeId) return;
+    // Clear stale state for the previous conversation
+    setMsgs([]);
+    setPendingFile(null);
+    setReplyTo(null);
+    setIsTyping(false);
+
     userApi
       .getMessages(activeId, 1, 100)
       .then((r) => {
@@ -869,13 +877,16 @@ function MessagesPage() {
       .catch(() => {});
   }, [activeId]);
 
+  // ── Sync URL param → activeId ────────────────────────────────────────────────
   useEffect(() => {
     if (paramId && paramId !== activeId) setActiveId(paramId);
   }, [paramId]);
 
+  // ── Auto-scroll ──────────────────────────────────────────────────────────────
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
+
   const scrollToBottom = () => {
     setTimeout(
       () => bottomRef.current?.scrollIntoView({ behavior: "smooth" }),
@@ -883,7 +894,9 @@ function MessagesPage() {
     );
   };
 
-  // Socket.io
+  // ── Socket — created once per accessToken, not per activeId ─────────────────
+  // Joining/leaving rooms is handled separately so we don't tear down the
+  // connection every time the user switches conversations.
   useEffect(() => {
     if (!accessToken) return;
     const chat = createChatConnection(accessToken);
@@ -891,30 +904,90 @@ function MessagesPage() {
     chat.onReceiveMessage((msg) => {
       if (msg.conversationId === activeIdRef.current) {
         setMsgs((p) => {
-          const exists = p.some(
+          // 1. Exact ID match → already have it
+          const exactMatch = p.some(
             (m) => (m.messageId || m.id) === (msg.messageId || msg.id),
           );
-          return exists ? p : [...p, msg];
+          if (exactMatch) return p;
+
+          // 2. Replace our own optimistic message with the real server copy
+          const optimisticIdx = p.findIndex(
+            (m) =>
+              m._optimistic &&
+              m.body === msg.body &&
+              String(m.senderId).toLowerCase() ===
+                String(msg.senderId).toLowerCase(),
+          );
+          if (optimisticIdx !== -1) {
+            const next = [...p];
+            next[optimisticIdx] = msg;
+            return next;
+          }
+
+          // 3. Brand-new incoming message from the other person
+          return [...p, msg];
         });
       }
       loadConvs();
     });
 
-    // Additional event handlers can be added here (Typing, Credits, etc.)
+    // FIX: wire up typing indicator
+    chat.onTyping?.((payload) => {
+      if (payload.conversationId === activeIdRef.current) {
+        setIsTyping(true);
+        // Auto-clear after 3 s if no follow-up event arrives
+        setTimeout(() => setIsTyping(false), 3000);
+      }
+    });
 
-    if (activeId) chat.joinConversation(activeId);
+    chat.onStopTyping?.((payload) => {
+      if (payload.conversationId === activeIdRef.current) {
+        setIsTyping(false);
+      }
+    });
+
     connRef.current = chat;
-
     return () => {
       chat.disconnect();
+      connRef.current = null;
     };
-  }, [accessToken, activeId]);
+  }, [accessToken, loadConvs]);
 
+  // FIX: join/leave the correct room whenever activeId changes, without
+  // rebuilding the whole socket connection.
+  useEffect(() => {
+    if (!connRef.current || !activeId) return;
+    connRef.current.joinConversation(activeId);
+    return () => {
+      connRef.current?.leaveConversation?.(activeId);
+    };
+  }, [activeId]);
+
+  // ── canCall — derive from activeConv once it's available ────────────────────
+  const activeConv = conversations.find((c) => c.conversationId === activeId);
+
+  useEffect(() => {
+    if (!activeConv) return;
+    // FIX: removed the bogus dynamic import that never called any API.
+    // Read flags directly from the conversation object (set by the server).
+    setCanCall({
+      voice: activeConv.voiceEnabled ?? false,
+      video: activeConv.videoEnabled ?? false,
+    });
+  }, [activeConv]);
+
+  // ── Send ─────────────────────────────────────────────────────────────────────
   const send = async (explicitAttachment = null) => {
     if (!activeId) return;
     const attachmentObj = explicitAttachment || pendingFile;
-    if (!text.trim() && !attachmentObj && !sending) return;
-    if (text.length > (credits?.textCharsRemaining || 0)) return;
+
+    // FIX: guard order — check sending flag first, then content
+    if (sending) return;
+    if (!text.trim() && !attachmentObj) return;
+    if (text.length > (credits?.textCharsRemaining ?? 0)) {
+      toast.error("Not enough text credits");
+      return;
+    }
 
     setSending(true);
     try {
@@ -929,17 +1002,45 @@ function MessagesPage() {
       const url = attachmentObj?.url || null;
       const rId = replyTo?.messageId || replyTo?.id || null;
 
+      // Optimistic message shown immediately regardless of send path
+      const tempId = `temp-${Date.now()}`;
+      const optimisticMsg = {
+        messageId: tempId,
+        senderId: user?.id,
+        conversationId: activeId,
+        body,
+        messageType: type,
+        attachmentUrl: url || null,
+        replyToId: rId,
+        replyToBody: replyTo?.body || null,
+        sentAt: new Date().toISOString(),
+        isRead: false,
+        _optimistic: true,
+      };
+      setMsgs((p) => [...p, optimisticMsg]);
+
       if (type === "text" && !url) {
+        // Socket path — server will echo back the real message
         if (connRef.current) connRef.current.sendMessage(activeId, body);
       } else {
-        const { data } = await userApi.sendMessage(activeId, {
-          body,
-          messageType: type,
-          attachmentUrl: url,
-          replyToId: rId,
-        });
-        setMsgs((p) => [...p, data.data]);
+        // REST path — replace optimistic msg with server response
+        try {
+          const { data } = await userApi.sendMessage(activeId, {
+            body,
+            messageType: type,
+            attachmentUrl: url,
+            replyToId: rId,
+          });
+          setMsgs((p) =>
+            p.map((m) => (m.messageId === tempId ? data.data : m)),
+          );
+        } catch (err) {
+          // Remove optimistic message on failure
+          setMsgs((p) => p.filter((m) => m.messageId !== tempId));
+          throw err; // re-throw so outer catch shows the toast
+        }
       }
+
       setText("");
       setPendingFile(null);
       setReplyTo(null);
@@ -952,9 +1053,12 @@ function MessagesPage() {
     }
   };
 
+  // ── File upload ──────────────────────────────────────────────────────────────
   const handleFile = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    // Reset input so the same file can be re-selected after clearing
+    e.target.value = "";
     toast.loading("Uploading...", { id: "u" });
     try {
       const { data } = await userApi.uploadChatAttachment(activeId, file);
@@ -969,36 +1073,49 @@ function MessagesPage() {
     }
   };
 
+  // ── Filtering ────────────────────────────────────────────────────────────────
   const filteredConvs = conversations.filter((c) => {
     if (filter === "unread") return c.unreadCount > 0;
+    if (filter === "recent") {
+      // Show conversations with activity in the last 24 h
+      const last = c.lastMessageAt ? new Date(c.lastMessageAt) : null;
+      return last && Date.now() - last.getTime() < 86_400_000;
+    }
     return true;
   });
 
-  const activeConv = conversations.find((c) => c.conversationId === activeId);
-  const [canCall, setCanCall] = useState({ voice: false, video: false });
+  // ── Helpers ──────────────────────────────────────────────────────────────────
+  const formatConvTime = (isoString) => {
+    if (!isoString) return "";
+    const d = new Date(isoString);
+    const now = new Date();
+    const sameDay =
+      d.getFullYear() === now.getFullYear() &&
+      d.getMonth() === now.getMonth() &&
+      d.getDate() === now.getDate();
+    return sameDay
+      ? d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+      : d.toLocaleDateString([], { month: "short", day: "numeric" });
+  };
 
-  useEffect(() => {
-    if (activeConv?.consultantId) {
-      // Fetch consultant config to see if calling is enabled
-      import("./api").then(({ consultantConfigApi }) => {
-        // Note: user-portal might not have admin api access, assuming userApi has a way or just check activeConv
-        setCanCall({
-          voice: activeConv.voiceEnabled ?? true,
-          video: activeConv.videoEnabled ?? true,
-        });
-      });
-    }
-  }, [activeConv]);
-
+  // ── Render ───────────────────────────────────────────────────────────────────
   return (
     <div className="crm-container">
       {/* 1. Inbox Sidebar */}
       <div className="crm-inbox-sidebar">
         <div className="crm-list-header">Inbox</div>
-        <div className="crm-inbox-item active" onClick={() => setFilter("all")}>
+
+        {/* FIX: all sidebar items now update the filter state */}
+        <div
+          className={`crm-inbox-item ${filter === "all" ? "active" : ""}`}
+          onClick={() => setFilter("all")}
+        >
           <MessageSquare size={16} /> All Messages
         </div>
-        <div className="crm-inbox-item" onClick={() => setFilter("unread")}>
+        <div
+          className={`crm-inbox-item ${filter === "unread" ? "active" : ""}`}
+          onClick={() => setFilter("unread")}
+        >
           <Bell size={16} /> Unread
           {conversations.some((c) => c.unreadCount > 0) && (
             <span
@@ -1012,10 +1129,16 @@ function MessagesPage() {
             />
           )}
         </div>
-        <div className="crm-inbox-item">
+        <div
+          className={`crm-inbox-item ${filter === "recent" ? "active" : ""}`}
+          onClick={() => setFilter("recent")}
+        >
           <Clock size={16} /> Recent
         </div>
-        <div className="crm-inbox-item">
+        <div
+          className={`crm-inbox-item ${filter === "starred" ? "active" : ""}`}
+          onClick={() => setFilter("starred")}
+        >
           <Star size={16} /> Starred
         </div>
       </div>
@@ -1024,7 +1147,7 @@ function MessagesPage() {
       <div className="crm-conv-list">
         <div className="crm-list-header">
           <span>Conversations</span>
-          <Filter size={14} color="#adb5bd" />
+          <Filter size={14} color="#232527" />
         </div>
         <div style={{ flex: 1, overflowY: "auto" }}>
           {filteredConvs.map((c) => (
@@ -1038,7 +1161,10 @@ function MessagesPage() {
             >
               <div className="crm-chat-item-top">
                 <div className="crm-chat-item-name">{c.otherUserName}</div>
-                <div className="crm-chat-item-time">12:45 PM</div>
+                {/* FIX: dynamic timestamp instead of hardcoded "12:45 PM" */}
+                <div className="crm-chat-item-time">
+                  {formatConvTime(c.lastMessageAt)}
+                </div>
               </div>
               <div
                 style={{
@@ -1068,12 +1194,12 @@ function MessagesPage() {
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              color: "#adb5bd",
+              color: "#000000",
               flexDirection: "column",
               gap: 16,
             }}
           >
-            <MessageSquare size={64} style={{ opacity: 0.2 }} />
+            <MessageSquare size={64} style={{ opacity: 1 }} />
             <p style={{ fontWeight: 500 }}>
               Select a consultant to start collaborating
             </p>
@@ -1237,6 +1363,7 @@ function MessagesPage() {
                   </div>
                 );
               })}
+
               {isTyping && (
                 <div
                   style={{
@@ -1282,10 +1409,36 @@ function MessagesPage() {
                   />
                 </div>
               )}
+
+              {/* FIX: show pending file preview so user knows a file is attached */}
+              {pendingFile && (
+                <div
+                  style={{
+                    padding: "6px 12px",
+                    background: "#f0f4ff",
+                    border: "1px solid var(--crm-border)",
+                    borderBottom: "none",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    fontSize: 12,
+                    color: "var(--blue)",
+                  }}
+                >
+                  <span>📎 {pendingFile.name || "Attachment ready"}</span>
+                  <X
+                    size={14}
+                    style={{ cursor: "pointer" }}
+                    onClick={() => setPendingFile(null)}
+                  />
+                </div>
+              )}
+
               <div className="crm-input-box">
                 <textarea
                   placeholder="Type something..."
                   value={text}
+                  style={{ color: "black" }}
                   onChange={(e) => setText(e.target.value)}
                   onKeyDown={(e) => {
                     if (e.key === "Enter" && !e.shiftKey) {
@@ -1377,7 +1530,7 @@ function MessagesPage() {
           <h3 style={{ fontSize: 18, fontWeight: 700, marginBottom: 4 }}>
             {activeConv?.otherUserName}
           </h3>
-          <p style={{ fontSize: 13, color: "#868e96", marginBottom: 20 }}>
+          <p style={{ fontSize: 13, color: "#1a1d20", marginBottom: 20 }}>
             Professional Consultant
           </p>
           <div style={{ display: "flex", gap: 8, justifyContent: "center" }}>
@@ -1387,7 +1540,7 @@ function MessagesPage() {
         </div>
 
         <div className="crm-details-section">
-          <div className="crm-details-title">Wallet & Credits</div>
+          <div className="crm-details-title">Wallet &amp; Credits</div>
           <div className="crm-field">
             <label>Text Balance</label>
             <div>

@@ -3,12 +3,14 @@ import type { NextRequest } from "next/server";
 import { jwtVerify } from "jose";
 
 function getCorsHeaders(request: NextRequest) {
-  const allowedOrigins = (process.env.CORS_ORIGIN || "https://new.10xdigitalventures.com")
+  const allowedOrigins = (
+    process.env.CORS_ORIGIN || "https://new.10xdigitalventures.com"
+  )
     .split(",")
-    .map(x => x.trim())
+    .map((x) => x.trim())
     .filter(Boolean);
 
-  const origin = (request.headers.get("origin") || "";
+  const origin = request.headers.get("origin") || "";
   const allowOrigin = allowedOrigins.includes(origin)
     ? origin
     : allowedOrigins[0] || "*";
@@ -18,7 +20,7 @@ function getCorsHeaders(request: NextRequest) {
     "Access-Control-Allow-Methods": "GET,POST,PUT,PATCH,DELETE,OPTIONS",
     "Access-Control-Allow-Headers": "Content-Type, Authorization",
     "Access-Control-Allow-Credentials": "false",
-    "Vary": "Origin",
+    Vary: "Origin",
   };
 }
 
@@ -84,7 +86,7 @@ export async function middleware(request: NextRequest) {
   if (!authHeader || !authHeader.startsWith("Bearer ")) {
     return NextResponse.json(
       { success: false, message: "Unauthorized" },
-      { status: 401, headers: corsHeaders }
+      { status: 401, headers: corsHeaders },
     );
   }
 
@@ -94,7 +96,7 @@ export async function middleware(request: NextRequest) {
   if (!payload || !payload.userId) {
     return NextResponse.json(
       { success: false, message: "Unauthorized" },
-      { status: 401, headers: corsHeaders }
+      { status: 401, headers: corsHeaders },
     );
   }
 
@@ -103,7 +105,7 @@ export async function middleware(request: NextRequest) {
   if (pathname.startsWith("/api/admin") && !role.includes("admin")) {
     return NextResponse.json(
       { success: false, message: "Forbidden" },
-      { status: 403, headers: corsHeaders }
+      { status: 403, headers: corsHeaders },
     );
   }
 
@@ -113,17 +115,22 @@ export async function middleware(request: NextRequest) {
   ) {
     return NextResponse.json(
       { success: false, message: "Forbidden" },
-      { status: 403, headers: corsHeaders }
+      { status: 403, headers: corsHeaders },
     );
   }
 
   if (
     pathname.startsWith("/api/user") &&
-    !(role.includes("user") || role.includes("client") || role.includes("admin") || role.includes("consultant"))
+    !(
+      role.includes("user") ||
+      role.includes("client") ||
+      role.includes("admin") ||
+      role.includes("consultant")
+    )
   ) {
     return NextResponse.json(
       { success: false, message: "Forbidden" },
-      { status: 403, headers: corsHeaders }
+      { status: 403, headers: corsHeaders },
     );
   }
 
