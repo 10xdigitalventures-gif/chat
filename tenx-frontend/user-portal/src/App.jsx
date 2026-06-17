@@ -68,6 +68,7 @@ function UserLayout() {
   const location = useLocation();
   const navigate = useNavigate();
   const { user, logout } = useAuthStore();
+  const [collapsed, setCollapsed] = useState(false);
 
   const isActive = (path) => {
     if (path === "/" && location.pathname === "/") return true;
@@ -78,10 +79,11 @@ function UserLayout() {
 
   return (
     <div
-      className={`layout ${isCrm ? "crm-ui" : ""}`}
+      className={`layout ${isCrm ? "crm-ui" : ""} ${collapsed ? "sidebar-collapsed" : ""}`}
       style={{ background: isCrm ? "#fff" : "var(--bg)" }}
     >
-      <aside className="sidebar-premium">
+      <aside className={`sidebar-premium ${collapsed ? "collapsed" : ""}`}>
+        {/* Logo — hide text when collapsed */}
         <div className="sidebar-logo-premium">
           <div
             style={{
@@ -95,57 +97,76 @@ function UserLayout() {
               color: "#fff",
               fontSize: 16,
               fontWeight: 900,
+              flexShrink: 0,
             }}
           >
             10
           </div>
-          10X <span className="blue">Convo</span>
+          {!collapsed && (
+            <span>
+              10X <span className="blue">Convo</span>
+            </span>
+          )}
         </div>
 
-        <div className="sidebar-profile-card">
-          <div className="avatar">{user?.userName?.charAt(0) || "U"}</div>
-          <div className="info">
-            <div className="name">{user?.userName || "User"}</div>
-            <div className="sub">Client Workspace</div>
+        {/* Profile card — hide details when collapsed */}
+        {!collapsed && (
+          <div className="sidebar-profile-card">
+            <div className="avatar">{user?.userName?.charAt(0) || "U"}</div>
+            <div className="info">
+              <div className="name">{user?.userName || "User"}</div>
+              <div className="sub">Client Workspace</div>
+            </div>
+            <ChevronRight size={14} color="#adb5bd" />
           </div>
-          <ChevronRight size={14} color="#adb5bd" />
-        </div>
+        )}
 
-        <div className="sidebar-search-box">
-          <Search className="search-icon" size={14} />
-          <input placeholder="Search consultants..." />
-          <span className="kbd">âŒ˜K</span>
-        </div>
+        {/* Search — hide when collapsed */}
+        {!collapsed && (
+          <div className="sidebar-search-box">
+            <Search className="search-icon" size={14} />
+            <input placeholder="Search consultants..." />
+            <span className="kbd">⌘K</span>
+          </div>
+        )}
 
         <nav className="sidebar-nav-premium">
           {userNav.map((item, i) =>
             item.section ? (
-              <div key={i} className="sidebar-section-premium">
-                {item.section}
-              </div>
+              // Hide section labels when collapsed
+              !collapsed && (
+                <div key={i} className="sidebar-section-premium">
+                  {item.section}
+                </div>
+              )
             ) : (
               <button
                 key={item.path}
                 className={`sidebar-item-premium ${isActive(item.path) ? "active" : ""}`}
                 onClick={() => navigate(item.path)}
+                title={collapsed ? item.label : undefined}
               >
                 <item.icon size={18} />
-                <span style={{ flex: 1 }}>{item.label}</span>
-                {item.label === "Messages" && (
-                  <span
-                    style={{
-                      width: 6,
-                      height: 6,
-                      borderRadius: "50%",
-                      background: "var(--blue)",
-                    }}
-                  />
+                {!collapsed && (
+                  <>
+                    <span style={{ flex: 1 }}>{item.label}</span>
+                    {item.label === "Messages" && (
+                      <span
+                        style={{
+                          width: 6,
+                          height: 6,
+                          borderRadius: "50%",
+                          background: "var(--blue)",
+                        }}
+                      />
+                    )}
+                  </>
                 )}
               </button>
             ),
           )}
 
-          <div className="sidebar-section-premium">System</div>
+          {!collapsed && <div className="sidebar-section-premium">System</div>}
           <button
             className="sidebar-item-premium"
             onClick={async () => {
@@ -153,14 +174,28 @@ function UserLayout() {
               navigate("/login");
             }}
             style={{ color: "#fa5252" }}
+            title={collapsed ? "Logout" : undefined}
           >
-            <LogOut size={18} /> Logout
+            <LogOut size={18} />
+            {!collapsed && "Logout"}
           </button>
         </nav>
 
-        <div className="sidebar-collapse-btn">
-          <ChevronRight size={14} style={{ transform: "rotate(180deg)" }} />
-        </div>
+        {/* Collapse toggle button */}
+        <button
+          className="sidebar-collapse-btn"
+          onClick={() => setCollapsed((c) => !c)}
+          title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+          style={{ cursor: "pointer" }}
+        >
+          <ChevronRight
+            size={14}
+            style={{
+              transform: collapsed ? "rotate(0deg)" : "rotate(180deg)",
+              transition: "transform 0.2s ease",
+            }}
+          />
+        </button>
       </aside>
 
       <div className="main">

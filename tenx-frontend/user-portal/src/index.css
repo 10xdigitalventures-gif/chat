@@ -1514,9 +1514,40 @@ option {
   border: 2px solid #fff;
   cursor: pointer;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  z-index: 10;
+  z-index: 99;
 }
 
+/* ── Sidebar collapse ───────────────────────────────────────────────────── */
+
+.sidebar-premium {
+  transition: width 0.2s ease;
+  width: 240px; /* your existing expanded width */
+}
+
+.sidebar-premium.collapsed {
+  width: 60px;
+}
+
+/* Keep icons centred when collapsed */
+.sidebar-premium.collapsed .sidebar-item-premium {
+  justify-content: center;
+  padding: 10px 0;
+}
+
+.sidebar-premium.collapsed .sidebar-logo-premium {
+  justify-content: center;
+  padding: 16px 0;
+}
+
+.sidebar-collapse-btn:hover {
+  background: var(--bg3, #f1f3f5);
+  color: var(--text, #12b886);
+}
+
+/* Shrink the CRM container's sidebar column too */
+.layout.sidebar-collapsed .crm-container {
+  grid-template-columns: 60px 1fr; /* adjust to match your grid */
+}
 /* 4-COLUMN CRM ADJUSTMENTS */
 .crm-inbox-sidebar {
   width: 200px;
