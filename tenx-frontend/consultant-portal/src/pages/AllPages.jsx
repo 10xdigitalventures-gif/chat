@@ -775,7 +775,7 @@ export function RequestsPage() {
 }
 
 // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-// MESSAGING PAGE (CRM STYLE)
+// MESSAGING PAçGE (CRM STYLE)
 // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 export function MessagingPage() {
   const { id: paramConvId } = useParams();
@@ -792,18 +792,24 @@ export function MessagingPage() {
   const [sending, setSending] = useState(false);
   const [pendingFile, setPendingFile] = useState(null);
   const [replyTo, setReplyTo] = useState(null);
-  const [filter, setFilter] = useState("all"); // all, unread, recent
+  const [filter, setFilter] = useState("all");
   const [search, setSearch] = useState("");
 
   const connectionRef = useRef(null);
   const bottomRef = useRef(null);
   const fileInputRef = useRef(null);
+  // FIX: keep a ref so socket callbacks always see the latest activeConv
+  // without needing it in the socket useEffect dependency array
+  const activeConvRef = useRef(activeConv);
+  useEffect(() => {
+    activeConvRef.current = activeConv;
+  }, [activeConv]);
 
   const activeConvData = conversations.find(
     (c) => c.conversationId === activeConv,
   );
 
-  // â”€â”€ Data Loading â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── Data Loading ──────────────────────────────────────────────────────────
   const loadConversations = useCallback(async () => {
     try {
       const { data } = await consultantApi.getConversations(1, 100);
@@ -814,6 +820,11 @@ export function MessagingPage() {
   const loadMessages = useCallback(
     async (convId) => {
       if (!convId || convId === "undefined") return;
+      // Clear stale state when switching conversations
+      setMessages([]);
+      setPendingFile(null);
+      setReplyTo(null);
+      setIsTyping(false);
       try {
         const { data } = await consultantApi.getMessages(convId, 1, 100);
         setMessages((data.data?.items || []).reverse());
@@ -832,12 +843,8 @@ export function MessagingPage() {
     if (activeConv) loadMessages(activeConv);
   }, [activeConv, loadMessages]);
 
+  // FIX: removed duplicate `paramConvId === "undefined"` block
   useEffect(() => {
-    if (paramConvId === "undefined") {
-      navigate("/messages", { replace: true });
-      setActiveConv(null);
-      return;
-    }
     if (paramConvId === "undefined") {
       navigate("/messages", { replace: true });
       setActiveConv(null);
@@ -850,35 +857,80 @@ export function MessagingPage() {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  // â”€â”€ Socket.io â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── Socket — created ONCE per accessToken, never per activeConv ───────────
+  // FIX: removed activeConv from dependency array — the ref handles currency.
+  // Previously the socket was torn down and rebuilt every time the user
+  // clicked a different conversation, causing missed messages and ghost
+  // listeners accumulating on each rebuild.
   useEffect(() => {
     if (!accessToken) return;
     const chat = createChatConnection(accessToken);
 
     chat.onReceiveMessage((msg) => {
-      if (msg.conversationId === activeConv) {
+      if (msg.conversationId === activeConvRef.current) {
         setMessages((p) => {
-          const exists = p.some(
+          // 1. Exact ID match — already in state
+          const exactMatch = p.some(
             (m) => (m.messageId || m.id) === (msg.messageId || msg.id),
           );
-          return exists ? p : [...p, msg];
+          if (exactMatch) return p;
+
+          // 2. Replace our own optimistic bubble with the real server copy
+          const optimisticIdx = p.findIndex(
+            (m) =>
+              m._optimistic &&
+              m.body === msg.body &&
+              String(m.senderId).toLowerCase() ===
+                String(msg.senderId).toLowerCase(),
+          );
+          if (optimisticIdx !== -1) {
+            const next = [...p];
+            next[optimisticIdx] = msg;
+            return next;
+          }
+
+          // 3. New message from the other person
+          return [...p, msg];
         });
-        consultantApi.markRead(activeConv).catch(() => {});
+        consultantApi.markRead(activeConvRef.current).catch(() => {});
       }
       loadConversations();
     });
 
-    if (activeConv) chat.joinConversation(activeConv);
-    connectionRef.current = chat;
+    chat.onTyping?.((payload) => {
+      if (payload.conversationId === activeConvRef.current) {
+        setIsTyping(true);
+        setTimeout(() => setIsTyping(false), 3000);
+      }
+    });
 
+    chat.onStopTyping?.((payload) => {
+      if (payload.conversationId === activeConvRef.current) {
+        setIsTyping(false);
+      }
+    });
+
+    connectionRef.current = chat;
     return () => {
       chat.disconnect();
+      connectionRef.current = null;
     };
-  }, [accessToken, activeConv, loadConversations]);
+  }, [accessToken, loadConversations]);
 
-  // â”€â”€ Handlers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // FIX: join/leave rooms in a separate effect so the socket stays alive
+  useEffect(() => {
+    if (!connectionRef.current || !activeConv) return;
+    connectionRef.current.joinConversation(activeConv);
+    return () => {
+      connectionRef.current?.leaveConversation?.(activeConv);
+    };
+  }, [activeConv]);
+
+  // ── Send ──────────────────────────────────────────────────────────────────
   const handleSend = async () => {
-    if (!activeConv || (!text.trim() && !pendingFile) || sending) return;
+    if (!activeConv || sending) return;
+    if (!text.trim() && !pendingFile) return;
+
     setSending(true);
     try {
       const type = pendingFile?.type || "text";
@@ -892,18 +944,48 @@ export function MessagingPage() {
       const url = pendingFile?.url || null;
       const rId = replyTo?.messageId || replyTo?.id || null;
 
+      // FIX: optimistic message — appears instantly, replaced or removed
+      // once the server responds, so the user always sees their own message.
+      const tempId = `temp-${Date.now()}`;
+      const optimisticMsg = {
+        messageId: tempId,
+        senderId: user?.id,
+        conversationId: activeConv,
+        body,
+        messageType: type,
+        attachmentUrl: url || null,
+        replyToId: rId,
+        replyToBody: replyTo?.body || null,
+        sentAt: new Date().toISOString(),
+        isRead: false,
+        _optimistic: true,
+      };
+      setMessages((p) => [...p, optimisticMsg]);
+
       if (type === "text" && !url) {
+        // Socket path — server echoes the real message back; onReceiveMessage
+        // will swap out the optimistic bubble when it arrives.
         if (connectionRef.current)
           connectionRef.current.sendMessage(activeConv, body);
       } else {
-        const { data } = await consultantApi.sendMessage(activeConv, {
-          body,
-          messageType: type,
-          attachmentUrl: url,
-          replyToId: rId,
-        });
-        setMessages((p) => [...p, data.data]);
+        // REST path — swap optimistic with real server response
+        try {
+          const { data } = await consultantApi.sendMessage(activeConv, {
+            body,
+            messageType: type,
+            attachmentUrl: url,
+            replyToId: rId,
+          });
+          setMessages((p) =>
+            p.map((m) => (m.messageId === tempId ? data.data : m)),
+          );
+        } catch (err) {
+          // Roll back the optimistic bubble on failure
+          setMessages((p) => p.filter((m) => m.messageId !== tempId));
+          throw err;
+        }
       }
+
       setText("");
       setPendingFile(null);
       setReplyTo(null);
@@ -917,6 +999,7 @@ export function MessagingPage() {
   const handleFileUpload = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    e.target.value = ""; // allow re-selecting the same file
     const type = file.type.startsWith("image/") ? "image" : "file";
     toast.loading("Uploading...", { id: "u" });
     try {
@@ -1025,7 +1108,7 @@ export function MessagingPage() {
               }}
             >
               <div className="crm-chat-item-top">
-                <div className="crm-chat-item-name">{c.otherUserName}</div>
+                {/* FIX: removed duplicate otherUserName — was rendered twice */}
                 <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                   <div
                     style={{
@@ -1039,6 +1122,7 @@ export function MessagingPage() {
                       fontWeight: 700,
                       fontSize: 12,
                       overflow: "hidden",
+                      flexShrink: 0,
                     }}
                   >
                     {c.otherUserAvatar ? (
@@ -1152,7 +1236,7 @@ export function MessagingPage() {
                 return (
                   <div key={m.messageId || m.id} className="crm-msg-row">
                     <div
-                      className={`crm-msg-bubble ${isMine ? "crm-msg-sent" : "crm-msg-recv"}`}
+                      className={`crm-msg-bubble ${isMine ? "crm-msg-sent" : "crm-msg-recv"} ${m._optimistic ? "optimistic" : ""}`}
                     >
                       {m.replyToId && (
                         <div className="reply-quote">
@@ -1205,7 +1289,9 @@ export function MessagingPage() {
                             })
                           : ""}
                         {isMine &&
-                          (m.isRead ? (
+                          (m._optimistic ? (
+                            <Clock size={12} />
+                          ) : m.isRead ? (
                             <CheckCheck size={12} />
                           ) : (
                             <Check size={12} />
@@ -1246,7 +1332,11 @@ export function MessagingPage() {
                   <span>
                     Replying to <b>{replyTo.body}</b>
                   </span>
-                  <X size={14} onClick={() => setReplyTo(null)} />
+                  <X
+                    size={14}
+                    style={{ cursor: "pointer" }}
+                    onClick={() => setReplyTo(null)}
+                  />
                 </div>
               )}
               {pendingFile && (
@@ -1263,7 +1353,11 @@ export function MessagingPage() {
                   <span>
                     Attached <b>{pendingFile.name}</b>
                   </span>
-                  <X size={14} onClick={() => setPendingFile(null)} />
+                  <X
+                    size={14}
+                    style={{ cursor: "pointer" }}
+                    onClick={() => setPendingFile(null)}
+                  />
                 </div>
               )}
               <div
@@ -1287,11 +1381,13 @@ export function MessagingPage() {
                   <div style={{ display: "flex", gap: 12, color: "#adb5bd" }}>
                     <Paperclip
                       size={18}
+                      style={{ cursor: "pointer" }}
                       onClick={() => fileInputRef.current.click()}
                     />
-                    <Mic size={18} />
+                    <Mic size={18} style={{ cursor: "pointer" }} />
                     <ImageIcon
                       size={18}
+                      style={{ cursor: "pointer" }}
                       onClick={() => fileInputRef.current.click()}
                     />
                   </div>
@@ -1430,7 +1526,6 @@ export function MessagingPage() {
 // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // EXPORT ALL PAGES
 // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-
 export const AllPages = {
   LoginPage,
   DashboardPage,

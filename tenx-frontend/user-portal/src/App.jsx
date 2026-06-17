@@ -1576,7 +1576,14 @@ function MessagesPage() {
           <p style={{ fontSize: 13, color: "#1a1d20", marginBottom: 20 }}>
             Professional Consultant
           </p>
-          <div style={{ display: "flex", gap: 8, justifyContent: "center" }}>
+          <div
+            style={{
+              display: "flex",
+              gap: 8,
+              justifyContent: "center",
+              backgroundColor: "#F8F9FA",
+            }}
+          >
             <button className="btn btn-ghost btn-sm">Profile</button>
             <button className="btn btn-ghost btn-sm">Schedule</button>
           </div>
