@@ -830,6 +830,7 @@ function MessagesPage() {
   const [credits, setCredits] = useState(null);
   const [filter, setFilter] = useState("all");
   const [canCall, setCanCall] = useState({ voice: false, video: false });
+  const [search, setSearch] = useState("");
 
   const connRef = useRef(null);
   const bottomRef = useRef(null);
@@ -1147,8 +1148,35 @@ function MessagesPage() {
       <div className="crm-conv-list">
         <div className="crm-list-header">
           <span>Conversations</span>
-          <Filter size={14} color="#232527" />
+          <div style={{ display: "flex", gap: 6 }}>
+            <Filter size={14} />
+            <MoreVertical size={14} />
+          </div>
         </div>
+        <div style={{ padding: 16 }}>
+          <div style={{ position: "relative", backgroundColor: "#21262C" }}>
+            <Search
+              size={14}
+              style={{
+                position: "absolute",
+                left: 10,
+                top: "50%",
+                transform: "translateY(-50%)",
+                color: "#ffffff",
+              }}
+            />
+            <input
+              placeholder="Search clients"
+              value={search}
+              onChange={(e) => {
+                setSearch(e.target.value);
+                setPage(1);
+              }}
+              style={{ color: "#fff", paddingLeft: 30 }}
+            />
+          </div>
+        </div>
+
         <div style={{ flex: 1, overflowY: "auto" }}>
           {filteredConvs.map((c) => (
             <div
@@ -1177,7 +1205,23 @@ function MessagesPage() {
                   {c.lastMessage || "No messages yet"}
                 </div>
                 {c.unreadCount > 0 && (
-                  <span className="chat-unread">{c.unreadCount}</span>
+                  // <span className="chat-unread">{c.unreadCount}</span>
+                  <div
+                    style={{
+                      background: "#228be6",
+                      color: "#fff",
+                      borderRadius: "50%",
+                      width: 18,
+                      height: 18,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      fontSize: 10,
+                      fontWeight: 700,
+                    }}
+                  >
+                    {c.unreadCount}
+                  </div>
                 )}
               </div>
             </div>
@@ -1194,7 +1238,7 @@ function MessagesPage() {
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              color: "#000000",
+              color: "#00000",
               flexDirection: "column",
               gap: 16,
             }}
@@ -1368,7 +1412,7 @@ function MessagesPage() {
                 <div
                   style={{
                     fontSize: 12,
-                    color: "var(--blue)",
+                    color: "#228be6",
                     fontStyle: "italic",
                     marginTop: 8,
                   }}
@@ -1383,14 +1427,13 @@ function MessagesPage() {
               {replyTo && (
                 <div
                   style={{
-                    padding: "8px 12px",
+                    padding: 8,
                     background: "#f8f9fa",
-                    border: "1px solid var(--crm-border)",
-                    borderBottom: "none",
                     borderRadius: "8px 8px 0 0",
                     display: "flex",
                     justifyContent: "space-between",
-                    alignItems: "center",
+                    border: "1px solid #e6e8eb",
+                    borderBottom: "none",
                   }}
                 >
                   <div

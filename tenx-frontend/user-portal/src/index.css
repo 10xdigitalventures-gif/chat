@@ -1137,7 +1137,7 @@ option {
 .crm-inbox-sidebar {
   width: 220px;
   background: var(--crm-panel);
-  border-right: 1px solid var(--crm-border);
+  border-right: 1px solid #e7e8eb;
   display: flex;
   flex-direction: column;
   flex-shrink: 0;
@@ -1145,7 +1145,7 @@ option {
 .crm-conv-list {
   width: 320px;
   background: var(--crm-panel);
-  border-right: 1px solid var(--crm-border);
+  border-right: 1px solid #e7e8eb;
   display: flex;
   flex-direction: column;
   flex-shrink: 0;
@@ -1171,6 +1171,7 @@ option {
   font-weight: 700;
   font-size: 14px;
   background: #fff;
+  color: #000000;
   display: flex;
   align-items: center;
   justify-content: space-between;
